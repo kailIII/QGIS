@@ -48942,8 +48942,13 @@ Ada masalah dengan basisdata simbol Anda.</translation>
     </message>
     <message>
         <location filename="../src/app/qgstipfactory.cpp" line="48"/>
+<<<<<<< HEAD
         <source>Become an QGIS translator</source>
         <translation>Menjadi penerjemah QGIS</translation>
+=======
+        <source>Become a QGIS translator</source>
+        <translation type="unfinished"></translation>
+>>>>>>> final-2_2_0-boundless
     </message>
     <message>
         <location filename="../src/app/qgstipfactory.cpp" line="57"/>
