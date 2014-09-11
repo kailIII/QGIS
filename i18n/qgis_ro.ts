@@ -48921,7 +48921,7 @@ There was a problem with your symbol database.</source>
     </message>
     <message>
         <location filename="../src/app/qgstipfactory.cpp" line="48"/>
-        <source>Become a QGIS translator</source>
+        <source>Become an QGIS translator</source>
         <translation>Deveniţi traducător QGIS</translation>
     </message>
     <message>

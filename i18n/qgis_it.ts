@@ -51107,15 +51107,9 @@ L&apos;errore è: %2</translation>
         <translation>Usa il titolo come nome del layer</translation>
     </message>
     <message>
-<<<<<<< HEAD
         <location filename="../src/ui/qgswfssourceselectbase.ui" line="30"/>
         <source>Coordinate reference system</source>
         <translation>Sistema di Riferimento</translation>
-=======
-        <location filename="../src/app/qgstipfactory.cpp" line="48"/>
-        <source>Become a QGIS translator</source>
-        <translation>Diventa un traduttore di QGIS</translation>
->>>>>>> final-2_2_0-boundless
     </message>
     <message>
         <location filename="../src/ui/qgswfssourceselectbase.ui" line="68"/>

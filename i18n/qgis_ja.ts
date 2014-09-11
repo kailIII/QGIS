@@ -49197,7 +49197,7 @@ There was a problem with your symbol database.</source>
     </message>
     <message>
         <location filename="../src/app/qgstipfactory.cpp" line="48"/>
-        <source>Become a QGIS translator</source>
+        <source>Become an QGIS translator</source>
         <translation>QGIS翻訳者になりましょう</translation>
     </message>
     <message>
