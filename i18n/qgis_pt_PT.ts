@@ -55699,7 +55699,6 @@ Para definir um SRC personalizado no QGIS precisa de entender bem a blibloteca d
 </translation>
     </message>
     <message>
-<<<<<<< HEAD
         <location filename="../src/core/qgscontexthelp_texts.cpp" line="65"/>
         <source>&lt;style&gt;
 	#toolbarConsole td{
