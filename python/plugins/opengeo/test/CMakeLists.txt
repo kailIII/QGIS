@@ -1,6 +1,0 @@
-FILE(GLOB INSTALLER_FILES *.py)
-
-PLUGIN_INSTALL(opengeo test ${INSTALLER_FILES} functional.txt)
-
-ADD_SUBDIRECTORY(data)
-ADD_SUBDIRECTORY(resources)

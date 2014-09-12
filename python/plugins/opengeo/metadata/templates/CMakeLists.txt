@@ -1,0 +1,3 @@
+FILE(GLOB INSTALLER_FILES *.xml)
+
+PLUGIN_INSTALL(opengeo metadata/templates ${INSTALLER_FILES})
