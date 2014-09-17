@@ -1,0 +1,12 @@
+[general]
+name = UjoClient
+description = Ujo client for QGIS
+category = Data management
+version = 0.11-SNAPSHOT-20140917-96482f1eed401fac68586ab832553de6be2f6045
+qgisMinimumVersion = 2.0
+author = Victor Olaya
+email = volaya@boundlessgeo.com
+website = www.boundlessgeo.com
+icon = ui/resources/geogig.png
+class_name = GeoGigPlugin
+

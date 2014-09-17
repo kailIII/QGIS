@@ -1,0 +1,3 @@
+FILE(GLOB INSTALLER_FILES *.xml *.qml)
+
+PLUGIN_INSTALL(geogig resources ${INSTALLER_FILES})
