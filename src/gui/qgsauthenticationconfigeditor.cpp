@@ -46,6 +46,11 @@ QgsAuthConfigEditor::~QgsAuthConfigEditor()
 {
 }
 
+void QgsAuthConfigEditor::toggleTitleVisibility(bool visible)
+{
+  lblAuthConfigDb->setVisible( visible );
+}
+
 void QgsAuthConfigEditor::selectionChanged( const QItemSelection& selected , const QItemSelection& deselected )
 {
   Q_UNUSED( selected );
