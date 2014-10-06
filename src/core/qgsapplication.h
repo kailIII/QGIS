@@ -120,6 +120,9 @@ class CORE_EXPORT QgsApplication : public QApplication
     //! Returns the path to the user qgis.db file.
     static const QString qgisUserDbFilePath();
 
+    //! Returns the path to the user authentication database file: qgis-auth.db.
+    static const QString qgisAuthDbFilePath();
+
     //! Returns the path to the splash screen image directory.
     static const QString splashPath();
 

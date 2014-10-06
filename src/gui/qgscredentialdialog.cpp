@@ -29,6 +29,9 @@ QgsCredentialDialog::QgsCredentialDialog( QWidget *parent, Qt::WindowFlags fl )
   connect( this, SIGNAL( credentialsRequested( QString, QString *, QString *, QString, bool * ) ),
            this, SLOT( requestCredentials( QString, QString *, QString *, QString, bool * ) ),
            Qt::BlockingQueuedConnection );
+  connect( this, SIGNAL( credentialsRequestedMasterPassword( QString *, bool * ) ),
+           this, SLOT( requestCredentialsMasterPassword( QString *, bool * ) ),
+           Qt::BlockingQueuedConnection );
 }
 
 QgsCredentialDialog::~QgsCredentialDialog()
@@ -54,6 +57,8 @@ bool QgsCredentialDialog::request( QString realm, QString &username, QString &pa
 void QgsCredentialDialog::requestCredentials( QString realm, QString *username, QString *password, QString message, bool *ok )
 {
   QgsDebugMsg( "Entering." );
+  stackedWidget->setCurrentIndex( 0 );
+
   labelRealm->setText( realm );
   leUsername->setText( *username );
   lePassword->setText( *password );
@@ -77,3 +82,57 @@ void QgsCredentialDialog::requestCredentials( QString realm, QString *username, 
     *password = lePassword->text();
   }
 }
+
+bool QgsCredentialDialog::requestMasterPassword( QString &password )
+{
+  bool ok;
+  if ( qApp->thread() != QThread::currentThread() )
+  {
+    QgsDebugMsg( "emitting signal" );
+    emit credentialsRequestedMasterPassword( &password, &ok );
+  }
+  else
+  {
+    requestCredentialsMasterPassword( &password, &ok );
+  }
+  return ok;
+}
+
+void QgsCredentialDialog::requestCredentialsMasterPassword( QString * password, bool * ok )
+{
+  QgsDebugMsg( "Entering." );
+  stackedWidget->setCurrentIndex( 1 );
+
+  // TODO: Always verify master password first, then only activate widgets for password reset on VERIFIED current password
+  // "This will cause your authentication database to be duplicated and completely rebuilt using new password."
+
+  QApplication::setOverrideCursor( Qt::ArrowCursor );
+
+  while ( true )
+  {
+    QgsDebugMsg( "exec()" );
+    *ok = exec() == QDialog::Accepted;
+    QgsDebugMsg( QString( "exec(): %1" ).arg( *ok ? "true" : "false" ) );
+
+    if ( *ok )
+    {
+      if ( !leMasterPass->text().isEmpty() )
+      {
+        *password = leMasterPass->text();
+        break;
+      }
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  QApplication::restoreOverrideCursor();
+}
+
+void QgsCredentialDialog::on_chkMasterPassShow_stateChanged( int state )
+{
+  leMasterPass->setEchoMode(( state > 0 ) ? QLineEdit::Normal : QLineEdit::Password );
+}
+

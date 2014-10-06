@@ -39,6 +39,7 @@
 #include "qgspluginregistry.h"
 #include "qgsmessagelog.h"
 #include "qgspythonrunner.h"
+#include "qgsauthenticationmanager.h"
 
 #include <cstdio>
 #include <stdio.h>
@@ -848,6 +849,9 @@ int main( int argc, char *argv[] )
   QCoreApplication::addLibraryPath( QgsApplication::pluginPath() );
   QCoreApplication::addLibraryPath( myPath );
 #endif
+
+  // initialize authentication manager singleton
+  QgsAuthManager::instance()->init();
 
   //set up splash screen
   QString mySplashPath( QgsCustomization::instance()->splashPath() );

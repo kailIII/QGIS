@@ -516,6 +516,14 @@ const QString QgsApplication::qgisUserDbFilePath()
 }
 
 /*!
+  Returns the path to the  user authentication database file: qgis-auth.db.
+*/
+const QString QgsApplication::qgisAuthDbFilePath()
+{
+  return qgisSettingsDirPath() + QString( "qgis-auth.db" );
+}
+
+/*!
   Returns the path to the splash screen image directory.
 */
 const QString QgsApplication::splashPath()
