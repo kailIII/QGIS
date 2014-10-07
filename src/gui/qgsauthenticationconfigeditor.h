@@ -6,7 +6,7 @@
 
 #include "ui_qgsauthenticationconfigeditor.h"
 
-class QgsAuthConfigEditor : public QWidget, private Ui::QgsAuthConfigEditor
+class GUI_EXPORT QgsAuthConfigEditor : public QWidget, private Ui::QgsAuthConfigEditor
 {
     Q_OBJECT
 

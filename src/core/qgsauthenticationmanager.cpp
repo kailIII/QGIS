@@ -688,6 +688,7 @@ bool QgsAuthManager::masterPasswordResetInput()
 //    return true;
 //  }
 //  return false;
+  return true;
 }
 
 bool QgsAuthManager::masterPasswordRowsInDb( int *rows ) const

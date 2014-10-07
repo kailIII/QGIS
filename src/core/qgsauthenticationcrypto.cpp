@@ -25,20 +25,14 @@
 using namespace CryptoPP;
 using namespace std;
 
-const QString QgsAuthCrypto::encrypt( QString pass, QString text, string cipher )
+const QString QgsAuthCrypto::encrypt( QString pass, QString text, QString cipher )
 {
-  string res( encryption( pass, text, cipher, true ) );
-  if ( res == "Unknown Error" )
-    return QObject::tr( "Unknown error" );
-  return QString::fromStdString( res );
+  return encryption( pass, text, cipher, true );
 }
 
-const QString QgsAuthCrypto::decrypt( QString pass, QString text, string cipher )
+const QString QgsAuthCrypto::decrypt( QString pass, QString text, QString cipher )
 {
-  string res( encryption( pass, text, cipher, false ) );
-  if ( res == "Unknown Error" )
-    return QObject::tr( "Unknown error" );
-  return QString::fromStdString( res );
+  return encryption( pass, text, cipher, false ) ;
 }
 
 void QgsAuthCrypto::passwordHash( const QString &pass, QString *salt, QString *hash )
@@ -130,10 +124,11 @@ bool QgsAuthCrypto::verifyPasswordHash( const QString &pass,
   return derivedhex == hashhex;
 }
 
-string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, bool encrypt )
+QString QgsAuthCrypto::encryption( QString Pass, QString Text, QString Cipher, bool encrypt )
 {
   string text = Text.toStdString();
   string pass = Pass.toStdString();
+  string cipher = Cipher.toStdString();
   string CipherText;
   string RecoveredText;
 
@@ -158,11 +153,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -220,11 +215,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -249,11 +244,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -278,11 +273,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -307,11 +302,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -336,11 +331,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -365,11 +360,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -394,11 +389,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -423,11 +418,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -452,11 +447,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -481,11 +476,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -510,11 +505,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -539,11 +534,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -568,11 +563,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -597,11 +592,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -626,11 +621,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -655,11 +650,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -684,11 +679,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -713,11 +708,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -742,11 +737,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -771,11 +766,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -800,11 +795,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -829,11 +824,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -858,11 +853,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -887,11 +882,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -916,11 +911,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -945,11 +940,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -974,11 +969,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -1003,11 +998,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -1032,11 +1027,11 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
@@ -1061,17 +1056,17 @@ string QgsAuthCrypto::encryption( QString Pass, QString Text, string cipher, boo
       }
       catch ( Exception& e )
       {
-        return e.what();
+        return QString( e.what() );
       }
       catch ( ... )
       {
-        return "Unknown Error";
+        return QString( "Unknown Error" );
       }
     }
   }
 
   if ( encrypt )
-    return CipherText;
+    return QString::fromStdString( CipherText );
 
-  return RecoveredText;
+  return QString::fromStdString( RecoveredText );
 }

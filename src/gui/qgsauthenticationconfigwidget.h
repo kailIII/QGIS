@@ -7,7 +7,7 @@
 #include "qgsauthenticationconfig.h"
 
 
-class QgsAuthConfigWidget : public QDialog, private Ui::QgsAuthConfigWidget
+class GUI_EXPORT QgsAuthConfigWidget : public QDialog, private Ui::QgsAuthConfigWidget
 {
     Q_OBJECT
 

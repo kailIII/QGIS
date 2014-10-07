@@ -5,7 +5,7 @@
 #include <QString>
 
 
-class QgsAuthType
+class CORE_EXPORT QgsAuthType
 {
   public:
     enum ProviderType
@@ -18,21 +18,21 @@ class QgsAuthType
       Unknown = 20 // padding for more standard auth types
     };
 
-    static const QHash<ProviderType, QString> typeNameHash();
+    static const QHash<QgsAuthType::ProviderType, QString> typeNameHash();
 
-    static ProviderType providerTypeFromInt( int itype );
+    static QgsAuthType::ProviderType providerTypeFromInt( int itype );
 
-    static const QString typeToString( ProviderType providertype = None );
+    static const QString typeToString( QgsAuthType::ProviderType providertype = None );
 
-    static ProviderType stringToType( const QString& name );
+    static QgsAuthType::ProviderType stringToType( const QString& name );
 
-    static const QString typeDescription( ProviderType providertype = None );
+    static const QString typeDescription( QgsAuthType::ProviderType providertype = None );
 };
 
 /**
  * @brief Base class for configs
  */
-class QgsAuthConfigBase
+class CORE_EXPORT QgsAuthConfigBase
 {
   public:
 
@@ -59,8 +59,6 @@ class QgsAuthConfigBase
 
     const QString typeToString() const;
 
-    const QgsAuthConfigBase& asBaseConfig();
-
     virtual bool isValid( bool validateid = false ) const;
 
     virtual const QString configString() const { return QString(); }
@@ -79,7 +77,7 @@ class QgsAuthConfigBase
 };
 
 
-class QgsAuthConfigBasic: public QgsAuthConfigBase
+class CORE_EXPORT QgsAuthConfigBasic: public QgsAuthConfigBase
 {
   public:
     QgsAuthConfigBasic();
@@ -109,7 +107,7 @@ class QgsAuthConfigBasic: public QgsAuthConfigBase
     QString mPassword;
 };
 
-class QgsAuthConfigPkiPaths: public QgsAuthConfigBase
+class CORE_EXPORT QgsAuthConfigPkiPaths: public QgsAuthConfigBase
 {
   public:
     QgsAuthConfigPkiPaths();

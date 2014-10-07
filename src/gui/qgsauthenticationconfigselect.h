@@ -6,7 +6,7 @@
 #include "ui_qgsauthenticationconfigselect.h"
 #include "qgsauthenticationconfig.h"
 
-class QgsAuthConfigSelect : public QWidget, private Ui::QgsAuthConfigSelect
+class GUI_EXPORT QgsAuthConfigSelect : public QWidget, private Ui::QgsAuthConfigSelect
 {
     Q_OBJECT
 

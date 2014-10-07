@@ -15,7 +15,7 @@
 
 class QgsAuthProvider;
 
-class QgsAuthManager : public QObject
+class CORE_EXPORT QgsAuthManager : public QObject
 {
     Q_OBJECT
   public:
@@ -79,8 +79,6 @@ class QgsAuthManager : public QObject
     void messageOut( const QString& message, const QString& tag = smAuthManTag, MessageLevel level = INFO ) const;
 
     void masterPasswordVerified( bool verified ) const;
-
-  public slots:
 
   private slots:
     void writeDebug( const QString& message, const QString& tag = QString(), MessageLevel level = INFO );

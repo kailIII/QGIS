@@ -59,15 +59,15 @@
 
 #include <QString>
 
-using namespace std;
+//using namespace std;
 
-class QgsAuthCrypto
+class CORE_EXPORT QgsAuthCrypto
 {
 
   public:
-    static const QString encrypt( QString pass, QString text, string cipher );
+    static const QString encrypt( QString pass, QString text, QString cipher );
 
-    static const QString decrypt( QString pass, QString text, string cipher );
+    static const QString decrypt( QString pass, QString text, QString cipher );
 
     static void passwordHash( const QString &pass , QString *salt, QString *hash );
 
@@ -77,7 +77,7 @@ class QgsAuthCrypto
                                     QString *hashderived = 0 );
 
   private:
-    static string encryption( QString Pass, QString Text, string cipher, bool encrypt );
+    static QString encryption( QString Pass, QString Text, QString Cipher, bool encrypt );
 };
 
 #endif  // QGSAUTHENTICATIONCRYPTO_H

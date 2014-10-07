@@ -13,20 +13,12 @@
 
 #include "qgsauthenticationconfig.h"
 
-class QgsAuthProvider : public QObject
+class CORE_EXPORT QgsAuthProvider
 {
-    Q_OBJECT
-  public:
-    // TODO: switch to QgsMessageLog enum
-    enum MessageLevel
-    {
-      INFO = 0,
-      WARNING = 1,
-      CRITICAL = 2
-    };
 
-    explicit QgsAuthProvider( QObject *parent = 0 ,
-                              QgsAuthType::ProviderType providertype = QgsAuthType::None );
+  public:
+
+    explicit QgsAuthProvider( QgsAuthType::ProviderType providertype = QgsAuthType::None );
 
     virtual ~QgsAuthProvider();
 
@@ -38,26 +30,18 @@ class QgsAuthProvider : public QObject
 
     virtual void updateNetworkReply( QNetworkReply *reply, const QString& authid ) = 0;
 
-  signals:
-    void messageOut( const QString& message, const QString& tag = authProviderTag(), MessageLevel level = INFO ) const;
-
-  protected slots:
-    void writeDebug( const QString& message, const QString& tag = QString(), MessageLevel level = INFO );
-
   protected:
-    static const QString authProviderTag() { return tr( "Authentication provider" ); }
+    static const QString authProviderTag() { return QObject::tr( "Authentication provider" ); }
 
   private:
-    Q_DISABLE_COPY( QgsAuthProvider )
-
     QgsAuthType::ProviderType mType;
 };
 
 
-class QgsAuthProviderBasic : public QgsAuthProvider
+class CORE_EXPORT QgsAuthProviderBasic : public QgsAuthProvider
 {
   public:
-    QgsAuthProviderBasic( QObject *parent = 0 );
+    QgsAuthProviderBasic();
 
     ~QgsAuthProviderBasic();
 
@@ -66,7 +50,6 @@ class QgsAuthProviderBasic : public QgsAuthProvider
     void updateNetworkReply( QNetworkReply *reply, const QString &authid );
 
   private:
-    Q_DISABLE_COPY( QgsAuthProviderBasic )
 
     QgsAuthConfigBasic getAuthBasicConfig( const QString& authid );
 
@@ -86,7 +69,7 @@ class QgsAuthProviderBasic : public QgsAuthProvider
  * @since 2.6
  */
 
-class QgsPkiPathsBundle
+class CORE_EXPORT QgsPkiPathsBundle
 {
   public:
     QgsPkiPathsBundle( const QgsAuthConfigPkiPaths& config,
@@ -117,10 +100,10 @@ class QgsPkiPathsBundle
 };
 
 
-class QgsAuthProviderPkiPaths : public QgsAuthProvider
+class CORE_EXPORT QgsAuthProviderPkiPaths : public QgsAuthProvider
 {
   public:
-    QgsAuthProviderPkiPaths( QObject *parent = 0 );
+    QgsAuthProviderPkiPaths();
 
     ~QgsAuthProviderPkiPaths();
 
@@ -130,7 +113,6 @@ class QgsAuthProviderPkiPaths : public QgsAuthProvider
     void updateNetworkReply( QNetworkReply *reply, const QString &authid );
 
   private:
-    Q_DISABLE_COPY( QgsAuthProviderPkiPaths )
 
     QgsPkiPathsBundle * getPkiPathsBundle( const QString &authid );
 

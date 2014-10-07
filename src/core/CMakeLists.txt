@@ -347,7 +347,6 @@ SET(QGIS_CORE_MOC_HDRS
 
   qgsapplication.h
   qgsauthenticationmanager.h
-  qgsauthenticationprovider.h
   qgsbrowsermodel.h
   qgscontexthelp.h
   qgscoordinatetransform.h
