@@ -67,6 +67,13 @@ QgsWMSConnection::QgsWMSConnection( QString theConnName ) :
     mUri.setParam( "password", password );
   }
 
+  QString authid = settings.value( credentialsKey + "/authid" ).toString();
+  if ( !authid.isEmpty() )
+  {
+    mUri.setParam( "authid", authid );
+  }
+  mConnectionInfo.append( ",authid=" + authid );
+
   QString referer = settings.value( key + "/referer" ).toString();
   if ( !referer.isEmpty() )
   {
