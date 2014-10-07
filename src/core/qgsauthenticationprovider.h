@@ -53,6 +53,7 @@ class QgsAuthProvider : public QObject
     QgsAuthType::ProviderType mType;
 };
 
+
 class QgsAuthProviderBasic : public QgsAuthProvider
 {
   public:
@@ -66,7 +67,14 @@ class QgsAuthProviderBasic : public QgsAuthProvider
 
   private:
     Q_DISABLE_COPY( QgsAuthProviderBasic )
-    static QMap< QString, QPair<QString, QString> > mCredentialCache;
+
+    QgsAuthConfigBasic getAuthBasicConfig( const QString& authid );
+
+    void putAuthBasicConfig( const QString& authid, QgsAuthConfigBasic config );
+
+    void removeAuthBasicConfig( const QString& authid );
+
+    static QMap<QString, QgsAuthConfigBasic> mAuthBasicCache;
 };
 
 
