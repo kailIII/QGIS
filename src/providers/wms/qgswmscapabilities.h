@@ -455,6 +455,15 @@ struct QgsWmsAuthorization
     }
   }
 
+  //! set authorization reply
+  void setAuthorizationReply( QNetworkReply * reply ) const
+  {
+    if ( !mAuthId.isEmpty() )
+    {
+      QgsAuthManager::instance()->updateNetworkReply( reply, mAuthId );
+    }
+  }
+
   //! Username for basic http authentication
   QString mUserName;
 

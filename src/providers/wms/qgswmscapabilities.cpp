@@ -44,11 +44,11 @@ bool QgsWmsSettings::parseUri( QString uriString )
   mAuth.mPassword = uri.param( "password" );
   QgsDebugMsg( "set password to " + mAuth.mPassword );
 
-  mAuth.mReferer = uri.param( "referer" );
-  QgsDebugMsg( "set referer to " + mAuth.mReferer );
-
   mAuth.mAuthId = uri.param( "authid" );
   QgsDebugMsg( "set authid to " + mAuth.mAuthId );
+
+  mAuth.mReferer = uri.param( "referer" );
+  QgsDebugMsg( "set referer to " + mAuth.mReferer );
 
   mActiveSubLayers = uri.params( "layers" );
   mActiveSubStyles = uri.params( "styles" );
@@ -1869,11 +1869,7 @@ bool QgsWmsCapabilitiesDownload::downloadCapabilities()
 
   QgsDebugMsg( QString( "getcapabilities: %1" ).arg( url ) );
   mCapabilitiesReply = QgsNetworkAccessManager::instance()->get( request );
-
-  if ( !mAuth.mAuthId.isEmpty() )
-  {
-    QgsAuthManager::instance()->updateNetworkReply( mCapabilitiesReply, mAuth.mAuthId );
-  }
+  mAuth.setAuthorizationReply( mCapabilitiesReply );
 
   connect( mCapabilitiesReply, SIGNAL( finished() ), this, SLOT( capabilitiesReplyFinished() ), Qt::DirectConnection );
   connect( mCapabilitiesReply, SIGNAL( downloadProgress( qint64, qint64 ) ), this, SLOT( capabilitiesReplyProgress( qint64, qint64 ) ), Qt::DirectConnection );
@@ -1923,6 +1919,7 @@ void QgsWmsCapabilitiesDownload::capabilitiesReplyFinished()
         mCapabilitiesReply->deleteLater();
         QgsDebugMsg( QString( "redirected getcapabilities: %1" ).arg( redirect.toString() ) );
         mCapabilitiesReply = QgsNetworkAccessManager::instance()->get( request );
+        mAuth.setAuthorizationReply( mCapabilitiesReply );
 
         connect( mCapabilitiesReply, SIGNAL( finished() ), this, SLOT( capabilitiesReplyFinished() ) );
         connect( mCapabilitiesReply, SIGNAL( downloadProgress( qint64, qint64 ) ), this, SLOT( capabilitiesReplyProgress( qint64, qint64 ) ) );
