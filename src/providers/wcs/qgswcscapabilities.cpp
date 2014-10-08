@@ -26,6 +26,7 @@
 
 #include <cmath>
 
+#include "qgsauthenticationmanager.h"
 #include "qgscoordinatetransform.h"
 #include "qgsdatasourceuri.h"
 #include "qgsrasterlayer.h"
@@ -162,6 +163,7 @@ bool QgsWcsCapabilities::sendRequest( QString const & url )
 
   QgsDebugMsg( QString( "getcapabilities: %1" ).arg( url ) );
   mCapabilitiesReply = QgsNetworkAccessManager::instance()->get( request );
+  setAuthorizationReply( mCapabilitiesReply );
 
   connect( mCapabilitiesReply, SIGNAL( finished() ), this, SLOT( capabilitiesReplyFinished() ) );
   connect( mCapabilitiesReply, SIGNAL( downloadProgress( qint64, qint64 ) ), this, SLOT( capabilitiesReplyProgress( qint64, qint64 ) ) );
@@ -362,6 +364,7 @@ void QgsWcsCapabilities::capabilitiesReplyFinished()
       mCapabilitiesReply->deleteLater();
       QgsDebugMsg( QString( "redirected getcapabilities: %1" ).arg( redirect.toString() ) );
       mCapabilitiesReply = QgsNetworkAccessManager::instance()->get( request );
+      setAuthorizationReply( mCapabilitiesReply );
 
       connect( mCapabilitiesReply, SIGNAL( finished() ), this, SLOT( capabilitiesReplyFinished() ) );
       connect( mCapabilitiesReply, SIGNAL( downloadProgress( qint64, qint64 ) ), this, SLOT( capabilitiesReplyProgress( qint64, qint64 ) ) );
@@ -388,6 +391,7 @@ void QgsWcsCapabilities::capabilitiesReplyFinished()
       mCapabilitiesReply->deleteLater();
 
       mCapabilitiesReply = QgsNetworkAccessManager::instance()->get( request );
+      setAuthorizationReply( mCapabilitiesReply );
       connect( mCapabilitiesReply, SIGNAL( finished() ), this, SLOT( capabilitiesReplyFinished() ) );
       connect( mCapabilitiesReply, SIGNAL( downloadProgress( qint64, qint64 ) ), this, SLOT( capabilitiesReplyProgress( qint64, qint64 ) ) );
       return;
@@ -1161,10 +1165,22 @@ QString QgsWcsCapabilities::lastErrorFormat()
 void QgsWcsCapabilities::setAuthorization( QNetworkRequest &request ) const
 {
   QgsDebugMsg( "entered" );
-  if ( mUri.hasParam( "username" ) && mUri.hasParam( "password" ) )
+  if ( mUri.hasParam( "authid" ) && !mUri.param( "authid" ).isEmpty() )
+  {
+    QgsAuthManager::instance()->updateNetworkRequest( request, mUri.param( "authid" ) );
+  }
+  else if ( mUri.hasParam( "username" ) && mUri.hasParam( "password" ) )
   {
     QgsDebugMsg( "setAuthorization " + mUri.param( "username" ) );
     request.setRawHeader( "Authorization", "Basic " + QString( "%1:%2" ).arg( mUri.param( "username" ) ).arg( mUri.param( "password" ) ).toAscii().toBase64() );
+  }
+}
+
+void QgsWcsCapabilities::setAuthorizationReply( QNetworkReply *reply ) const
+{
+  if ( mUri.hasParam( "authid" ) && !mUri.param( "authid" ).isEmpty() )
+  {
+    QgsAuthManager::instance()->updateNetworkReply( reply, mUri.param( "authid" ) );
   }
 }
 
