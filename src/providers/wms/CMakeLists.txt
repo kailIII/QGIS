@@ -23,6 +23,7 @@ INCLUDE_DIRECTORIES( . ../../core ../../core/raster ../../gui
   ${CMAKE_CURRENT_BINARY_DIR}/../../ui
   ${GDAL_INCLUDE_DIR}
   ${GEOS_INCLUDE_DIR}
+  ${CRYPTOPP_INCLUDE_DIR}
   ${QT_QTSCRIPT_INCLUDE_DIR}
 )
 
@@ -33,6 +34,7 @@ TARGET_LINK_LIBRARIES(wmsprovider
   qgis_gui
   ${QT_QTSCRIPT_LIBRARY}
   ${GDAL_LIBRARY}  # for OGR_G_CreateGeometryFromJson()
+  ${CRYPTOPP_LIBRARY}
 )
 
 INSTALL (TARGETS wmsprovider
