@@ -1,0 +1,3 @@
+FILE(GLOB INSTALLER_FILES *.xsl)
+
+PLUGIN_INSTALL(opengeo metadata/xsl ${INSTALLER_FILES})

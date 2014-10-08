@@ -150,6 +150,7 @@ class BatchProcessingDialog(AlgorithmExecutionDialog):
                 i += 1
 
         if self.alg.getVisibleOutputsCount():
+            self.table.setColumnWidth(i, 200)
             self.table.setHorizontalHeaderItem(i,
                 QtGui.QTableWidgetItem(self.tr('Load in QGIS')))
 
@@ -205,6 +206,10 @@ class BatchProcessingDialog(AlgorithmExecutionDialog):
         for (i, alg) in enumerate(self.algs):
             self.setBaseText(self.tr('Processing algorithm %d/%d...') %(i + 1, len(self.algs)))
             self.setInfo(self.tr('<b>Algorithm %s starting...</b>' % alg.name))
+            try:
+                self.repaint()
+            except:
+                pass
             if runalg(alg, self) and not self.canceled:
                 if self.load[i]:
                     handleAlgorithmResults(alg, self, False)

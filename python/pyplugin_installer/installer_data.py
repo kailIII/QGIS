@@ -93,6 +93,8 @@ seenPluginGroup = "/Qgis/plugin-seen"
 
 # Repositories: (name, url, possible depreciated url)
 officialRepo = ( QCoreApplication.translate("QgsPluginInstaller", "QGIS Official Plugin Repository"), "http://plugins.qgis.org/plugins/plugins.xml","http://plugins.qgis.org/plugins")
+boundlessRepo = ( QCoreApplication.translate("QgsPluginInstaller", "Boundless Official Plugin Repository"), "http://qgis.boundlessgeo.com/plugins.xml","http://qgis.boundlessgeo.com")
+
 depreciatedRepos = [
     ("Old QGIS Official Repository",   "http://pyqgis.org/repo/official"),
     ("Old QGIS Contributed Repository","http://pyqgis.org/repo/contributed"),
@@ -326,6 +328,7 @@ class Repositories(QObject):
     settings.beginGroup(reposGroup)
     # first, update repositories in QSettings if needed
     officialRepoPresent = False
+    boundlessRepoPresent = False        
     for key in settings.childGroups():
       url = settings.value(key+"/url", "", type=unicode)
       if url == officialRepo[1]:
@@ -333,8 +336,12 @@ class Repositories(QObject):
       if url == officialRepo[2]:
         settings.setValue(key+"/url", officialRepo[1]) # correct a depreciated url
         officialRepoPresent = True
+      if url == boundlessRepo[1]:
+        boundlessRepoPresent = True        
     if not officialRepoPresent:
       settings.setValue(officialRepo[0]+"/url", officialRepo[1])
+    if not boundlessRepoPresent:
+      settings.setValue(boundlessRepo[0]+"/url", boundlessRepo[1])      
 
     for key in settings.childGroups():
       self.mRepositories[key] = {}
@@ -478,7 +485,6 @@ class Repositories(QObject):
       self.checkingDone.emit()
 
     reply.deleteLater()
-
 
   # ----------------------------------------- #
   def inspectionFilter(self):
