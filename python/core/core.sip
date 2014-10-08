@@ -15,7 +15,7 @@
 %Include qgsapplication.sip
 %Include qgsattributeaction.sip
 %Include qgsauthenticationconfig.sip
-%Include qgsauthenticationcrypto.sip
+// %Include qgsauthenticationcrypto.sip
 %Include qgsauthenticationmanager.sip
 %Include qgsauthenticationprovider.sip
 %Include qgsbrowsermodel.sip
