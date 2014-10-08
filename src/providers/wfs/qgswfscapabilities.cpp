@@ -13,6 +13,7 @@
  *                                                                         *
  ***************************************************************************/
 #include "qgswfscapabilities.h"
+#include "qgsauthenticationmanager.h"
 #include "qgsexpression.h"
 #include "qgslogger.h"
 #include "qgsmessagelog.h"
@@ -141,6 +142,10 @@ QString QgsWFSCapabilities::uriGetFeature( QString typeName, QString crsString, 
     uri += "&username=" + mUri.param( "username" );
     uri += "&password=" + mUri.param( "password" );
   }
+  if ( mUri.hasParam( "authid" ) )
+  {
+    uri += "&authid=" + mUri.param( "authid" );
+  }
   QgsDebugMsg( uri );
   return uri;
 }
@@ -148,10 +153,22 @@ QString QgsWFSCapabilities::uriGetFeature( QString typeName, QString crsString, 
 void QgsWFSCapabilities::setAuthorization( QNetworkRequest &request ) const
 {
   QgsDebugMsg( "entered" );
-  if ( mUri.hasParam( "username" ) && mUri.hasParam( "password" ) )
+  if ( mUri.hasParam( "authid" ) && !mUri.param( "authid" ).isEmpty() )
+  {
+    QgsAuthManager::instance()->updateNetworkRequest( request, mUri.param( "authid" ) );
+  }
+  else if ( mUri.hasParam( "username" ) && mUri.hasParam( "password" ) )
   {
     QgsDebugMsg( "setAuthorization " + mUri.param( "username" ) );
     request.setRawHeader( "Authorization", "Basic " + QString( "%1:%2" ).arg( mUri.param( "username" ) ).arg( mUri.param( "password" ) ).toAscii().toBase64() );
+  }
+}
+
+void QgsWFSCapabilities::setAuthorizationReply( QNetworkReply *reply ) const
+{
+  if ( mUri.hasParam( "authid" ) && !mUri.param( "authid" ).isEmpty() )
+  {
+    QgsAuthManager::instance()->updateNetworkReply( reply, mUri.param( "authid" ) );
   }
 }
 
@@ -164,6 +181,8 @@ void QgsWFSCapabilities::requestCapabilities()
   setAuthorization( request );
   request.setAttribute( QNetworkRequest::CacheSaveControlAttribute, true );
   mCapabilitiesReply = QgsNetworkAccessManager::instance()->get( request );
+  setAuthorizationReply( mCapabilitiesReply );
+
   connect( mCapabilitiesReply, SIGNAL( finished() ), this, SLOT( capabilitiesReplyFinished() ) );
 }
 
@@ -193,6 +212,7 @@ void QgsWFSCapabilities::capabilitiesReplyFinished()
     request.setAttribute( QNetworkRequest::CacheSaveControlAttribute, true );
 
     mCapabilitiesReply = QgsNetworkAccessManager::instance()->get( request );
+    setAuthorizationReply( mCapabilitiesReply );
 
     connect( mCapabilitiesReply, SIGNAL( finished() ), this, SLOT( capabilitiesReplyFinished() ) );
     return;

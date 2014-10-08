@@ -76,6 +76,9 @@ class QgsWFSCapabilities : public QObject
     //! set authorization header
     void setAuthorization( QNetworkRequest &request ) const;
 
+    //! set authorization reply
+    void setAuthorizationReply( QNetworkReply * reply ) const;
+
   signals:
     void gotCapabilities();
 

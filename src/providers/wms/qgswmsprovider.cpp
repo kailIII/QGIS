@@ -2369,6 +2369,8 @@ QgsRasterIdentifyResult QgsWmsProvider::identify( const QgsPoint & thePoint, Qgs
     QNetworkRequest request( requestUrl );
     mSettings.authorization().setAuthorization( request );
     mIdentifyReply = QgsNetworkAccessManager::instance()->get( request );
+    mSettings.authorization().setAuthorizationReply( mIdentifyReply );
+
     connect( mIdentifyReply, SIGNAL( finished() ), this, SLOT( identifyReplyFinished() ) );
 
     QEventLoop loop;
@@ -2790,6 +2792,7 @@ void QgsWmsProvider::identifyReplyFinished()
 
       QgsDebugMsg( QString( "redirected getfeatureinfo: %1" ).arg( redirect.toString() ) );
       mIdentifyReply = QgsNetworkAccessManager::instance()->get( QNetworkRequest( redirect.toUrl() ) );
+      mSettings.authorization().setAuthorizationReply( mIdentifyReply );
       mIdentifyReply->setProperty( "eventLoop", QVariant::fromValue( qobject_cast<QObject *>( loop ) ) );
       connect( mIdentifyReply, SIGNAL( finished() ), this, SLOT( identifyReplyFinished() ) );
       return;
@@ -3024,6 +3027,7 @@ QImage QgsWmsProvider::getLegendGraphic( double scale, bool forceRefresh )
 
   QgsDebugMsg( QString( "getlegendgraphics: %1" ).arg( url.toString() ) );
   mGetLegendGraphicReply = QgsNetworkAccessManager::instance()->get( request );
+  mSettings.authorization().setAuthorizationReply( mGetLegendGraphicReply );
   connect( mGetLegendGraphicReply, SIGNAL( finished() ), this, SLOT( getLegendGraphicReplyFinished() ) );
   connect( mGetLegendGraphicReply, SIGNAL( downloadProgress( qint64, qint64 ) ), this, SLOT( getLegendGraphicReplyProgress( qint64, qint64 ) ) );
 
@@ -3069,6 +3073,7 @@ void QgsWmsProvider::getLegendGraphicReplyFinished()
         mGetLegendGraphicReply->deleteLater();
         QgsDebugMsg( QString( "redirected GetLegendGraphic: %1" ).arg( redirect.toString() ) );
         mGetLegendGraphicReply = QgsNetworkAccessManager::instance()->get( request );
+        mSettings.authorization().setAuthorizationReply( mGetLegendGraphicReply );
         mGetLegendGraphicReply->setProperty( "eventLoop", QVariant::fromValue( qobject_cast<QObject *>( loop ) ) );
 
         connect( mGetLegendGraphicReply, SIGNAL( finished() ), this, SLOT( getLegendGraphicReplyFinished() ) );
