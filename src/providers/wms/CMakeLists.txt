@@ -24,6 +24,7 @@ INCLUDE_DIRECTORIES( . ../../core ../../core/raster ../../gui
   ${GDAL_INCLUDE_DIR}
   ${GEOS_INCLUDE_DIR}
   ${QT_QTSCRIPT_INCLUDE_DIR}
+  ${CRYPTOPP_INCLUDE_DIR}
 )
 
 ADD_LIBRARY(wmsprovider MODULE ${WMS_SRCS} ${WMS_MOC_SRCS})
