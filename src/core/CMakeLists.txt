@@ -58,7 +58,6 @@ SET(QGIS_CORE_SRCS
   qgsapplication.cpp
   qgsattributeaction.cpp
   qgsauthenticationconfig.cpp
-  qgsauthenticationcrypto.cpp
   qgsauthenticationmanager.cpp
   qgsauthenticationprovider.cpp
   qgsbrowsermodel.cpp
@@ -463,7 +462,6 @@ SET(QGIS_CORE_HDRS
   qgsapplication.h
   qgsattributeaction.h
   qgsauthenticationconfig.h
-  qgsauthenticationcrypto.h
   qgsauthenticationmanager.h
   qgsauthenticationprovider.h
   qgscachedfeatureiterator.h
@@ -686,7 +684,6 @@ INCLUDE_DIRECTORIES(
   renderer
   symbology-ng
   gps/qextserialport
-  ${CRYPTOPP_INCLUDE_DIR}
   ${SPATIALINDEX_INCLUDE_DIR}
   ${PROJ_INCLUDE_DIR}
   ${GEOS_INCLUDE_DIR}
@@ -758,7 +755,7 @@ ENDIF (WIN32)
 IF(APPLE)
   TARGET_LINK_LIBRARIES(qgis_core "-framework CoreFoundation -framework IOKit")
   # for Crypto++ lib on Mac, ASM is disabled
-  ADD_DEFINITIONS(-DCRYPTOPP_DISABLE_ASM=1)
+#  ADD_DEFINITIONS(-DCRYPTOPP_DISABLE_ASM=1)
 ENDIF(APPLE)
 
 IF (NOT WITH_INTERNAL_QEXTSERIALPORT)
@@ -780,7 +777,6 @@ TARGET_LINK_LIBRARIES(qgis_core
   ${QT_QTSQL_LIBRARY}
   ${QSCINTILLA_LIBRARY}
 
-  ${CRYPTOPP_LIBRARY}
   ${PROJ_LIBRARY}
   ${GEOS_LIBRARY}
   ${GDAL_LIBRARY}
