@@ -11,7 +11,7 @@
 
 #include "qgsauthenticationconfig.h"
 #include "qgsauthenticationprovider.h"
-#include "qgsauthenticationcrypto.h"
+//#include "qgsauthenticationcrypto.h"
 
 class QgsAuthProvider;
 
