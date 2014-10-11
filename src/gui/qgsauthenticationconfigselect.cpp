@@ -15,6 +15,7 @@ QgsAuthConfigSelect::QgsAuthConfigSelect( QWidget *parent )
 {
   setupUi( this );
 
+  clearConfig();
   populateConfigSelector();
 }
 
