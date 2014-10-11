@@ -8,12 +8,15 @@
 #include "qgsauthenticationmanager.h"
 #include "qgsauthenticationconfigwidget.h"
 
-QgsAuthConfigSelect::QgsAuthConfigSelect( QWidget *parent )
+QgsAuthConfigSelect::QgsAuthConfigSelect( QWidget *parent, bool keypasssupported )
     : QWidget( parent )
+    , mKeyPassSupported( keypasssupported )
     , mConfigId( QString() )
     , mConfigs( QHash<QString, QgsAuthConfigBase>() )
 {
   setupUi( this );
+
+  lblPassUnsupported->setVisible( !mKeyPassSupported );
 
   clearConfig();
   populateConfigSelector();
@@ -21,6 +24,12 @@ QgsAuthConfigSelect::QgsAuthConfigSelect( QWidget *parent )
 
 QgsAuthConfigSelect::~QgsAuthConfigSelect()
 {
+}
+
+void QgsAuthConfigSelect::setKeyPassSupported( bool supported )
+{
+  mKeyPassSupported = supported;
+  lblPassUnsupported->setVisible( !mKeyPassSupported );
 }
 
 void QgsAuthConfigSelect::setConfigId( const QString& authid )
