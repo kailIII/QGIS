@@ -44,20 +44,25 @@ if(CRYPTOPP_INCLUDE_DIR AND CRYPTOPP_LIBRARY)
 
 else(CRYPTOPP_INCLUDE_DIR AND CRYPTOPP_LIBRARY)
 
-  find_path(CRYPTOPP_INCLUDE_DIR cryptlib.h PATHS
+  find_path(CRYPTOPP_INCLUDE_DIR NAMES cryptopp/cryptlib.h crypto++/cryptlib.h
+    PATHS
       /usr/include
       /usr/local/include
       /opt/local/include
-      $ENV{SystemDrive}/Crypto++/include
-      PATH_SUFFIXES cryptopp crypto++
-      )
+      "$ENV{LIB_DIR}/include"
+      "$ENV{INCLUDE}"
+      "$ENV{OSGEO4W_ROOT}/include"
+  )
 
-  find_library(CRYPTOPP_LIBRARY NAMES cryptopp crypto++ PATHS
+  find_library(CRYPTOPP_LIBRARY NAMES cryptopp crypto++
+    PATHS
       /usr/lib
       /usr/local/lib
       /opt/local/lib
-      $ENV{SystemDrive}/Crypto++/lib
-      )
+      "$ENV{LIB_DIR}/lib"
+      "$ENV{LIB}"
+      "$ENV{OSGEO4W_ROOT}/lib"
+  )
 
   if(CRYPTOPP_INCLUDE_DIR AND CRYPTOPP_LIBRARY)
     set(CRYPTOPP_FOUND TRUE)
