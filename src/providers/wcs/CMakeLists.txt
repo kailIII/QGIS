@@ -20,6 +20,7 @@ INCLUDE_DIRECTORIES( . ../../core ../../core/raster ../../gui
   ../gdal
   ${CMAKE_CURRENT_BINARY_DIR}/../../ui
   ${GDAL_INCLUDE_DIR}
+  ${CRYPTOPP_INCLUDE_DIR}
 )
 
 ADD_LIBRARY(wcsprovider MODULE ${WCS_SRCS} ${WCS_MOC_SRCS})

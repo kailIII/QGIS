@@ -9,7 +9,7 @@
 #include <QVariant>
 
 #include "qgsapplication.h"
-//#include "qgsauthenticationcrypto.h"
+#include "qgsauthenticationcrypto.h"
 #include "qgscredentials.h"
 
 
@@ -426,8 +426,7 @@ bool QgsAuthManager::storeAuthenticationConfig( QgsAuthConfigBase &config )
   query.bindValue( ":uri", config.uri() );
   query.bindValue( ":type", config.typeToString() );
   query.bindValue( ":version", config.version() );
-//  query.bindValue( ":config", QgsAuthCrypto::encrypt( mMasterPass, configstring, "AES" ) );
-  query.bindValue( ":config", configstring );
+  query.bindValue( ":config", QgsAuthCrypto::encrypt( mMasterPass, configstring, "AES" ) );
 
   if ( !authDbStartTransaction() )
     return false;
@@ -493,8 +492,7 @@ bool QgsAuthManager::updateAuthenticationConfig( const QgsAuthConfigBase& config
   query.bindValue( ":uri", config.uri() );
   query.bindValue( ":type", config.typeToString() );
   query.bindValue( ":version", config.version() );
-//  query.bindValue( ":config", QgsAuthCrypto::encrypt( mMasterPass, configstring, "AES" ) );
-  query.bindValue( ":config", configstring );
+  query.bindValue( ":config", QgsAuthCrypto::encrypt( mMasterPass, configstring, "AES" ) );
 
   if ( !authDbStartTransaction() )
     return false;
@@ -549,8 +547,7 @@ bool QgsAuthManager::loadAuthenticationConfig( const QString& authid, QgsAuthCon
 
       if ( full )
       {
-//        config.loadConfigString( QgsAuthCrypto::decrypt( mMasterPass, query.value( 5 ).toString(), "AES" ) );
-        config.loadConfigString( query.value( 5 ).toString() );
+        config.loadConfigString( QgsAuthCrypto::decrypt( mMasterPass, query.value( 5 ).toString(), "AES" ) );
       }
 
       emit messageOut( QString( "Load %1 config SUCCESS for authid: %2" ).arg( full ? "full" : "base" ) .arg( authid ) );
@@ -696,62 +693,58 @@ bool QgsAuthManager::masterPasswordResetInput()
 
 bool QgsAuthManager::masterPasswordRowsInDb( int *rows ) const
 {
-//  QSqlQuery query( authDbConnection() );
-//  query.prepare( QString( "SELECT Count(*) FROM %1" ).arg( authDbPassTable() ) );
+  QSqlQuery query( authDbConnection() );
+  query.prepare( QString( "SELECT Count(*) FROM %1" ).arg( authDbPassTable() ) );
 
-//  bool ok = authDbQuery( &query );
-//  if ( query.first() )
-//  {
-//    *rows = query.value( 0 ).toInt();
-//  }
+  bool ok = authDbQuery( &query );
+  if ( query.first() )
+  {
+    *rows = query.value( 0 ).toInt();
+  }
 
-//  query.clear();
-//  return ok;
-
-  *rows = 1;
-  return true;
+  query.clear();
+  return ok;
 }
 
 bool QgsAuthManager::masterPasswordCheckAgainstDb() const
 {
   // first verify there is only one row in auth db (uses first found)
 
-//  QSqlQuery query( authDbConnection() );
-//  query.prepare( QString( "SELECT salt, hash FROM %1" ).arg( authDbPassTable() ) );
-//  if ( !authDbQuery( &query ) )
-//    return false;
+  QSqlQuery query( authDbConnection() );
+  query.prepare( QString( "SELECT salt, hash FROM %1" ).arg( authDbPassTable() ) );
+  if ( !authDbQuery( &query ) )
+    return false;
 
-//  if ( !query.first() )
-//    return false;
+  if ( !query.first() )
+    return false;
 
-//  QString salt = query.value( 0 ).toString();
-//  QString hash = query.value( 1 ).toString();
+  QString salt = query.value( 0 ).toString();
+  QString hash = query.value( 1 ).toString();
 
-//  query.clear();
+  query.clear();
 
-//  return QgsAuthCrypto::verifyPasswordHash( mMasterPass, salt, hash );
-  return true;
+  return QgsAuthCrypto::verifyPasswordHash( mMasterPass, salt, hash );
 }
 
 bool QgsAuthManager::masterPasswordStoreInDb() const
 {
-//  QString salt, hash;
-//  QgsAuthCrypto::passwordHash( mMasterPass, &salt, &hash );
+  QString salt, hash;
+  QgsAuthCrypto::passwordHash( mMasterPass, &salt, &hash );
 
-//  QSqlQuery query( authDbConnection() );
-//  query.prepare( QString( "INSERT INTO %1 (salt, hash) VALUES (:salt, :hash)" ).arg( authDbPassTable() ) );
+  QSqlQuery query( authDbConnection() );
+  query.prepare( QString( "INSERT INTO %1 (salt, hash) VALUES (:salt, :hash)" ).arg( authDbPassTable() ) );
 
-//  query.bindValue( ":salt", salt );
-//  query.bindValue( ":hash", hash );
+  query.bindValue( ":salt", salt );
+  query.bindValue( ":hash", hash );
 
-//  if ( !authDbStartTransaction() )
-//    return false;
+  if ( !authDbStartTransaction() )
+    return false;
 
-//  if ( !authDbQuery( &query ) )
-//    return false;
+  if ( !authDbQuery( &query ) )
+    return false;
 
-//  if ( !authDbCommit() )
-//    return false;
+  if ( !authDbCommit() )
+    return false;
 
   return true;
 }
