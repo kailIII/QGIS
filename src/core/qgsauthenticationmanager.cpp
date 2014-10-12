@@ -10,11 +10,11 @@
 
 #include "qgsapplication.h"
 #include "qgsauthenticationcrypto.h"
+#include "qgsauthenticationprovider.h"
 #include "qgscredentials.h"
 
 
 QgsAuthManager *QgsAuthManager::smInstance = 0;
-//QMap<QString, QgsAuthPkiGroup *> QgsAuthManager::mAuthPkiGroupCache = QMap<QString, QgsAuthPkiGroup *>();
 const QString QgsAuthManager::smAuthConfigTable = "auth_configs";
 const QString QgsAuthManager::smAuthPassTable = "auth_pass";
 const QString QgsAuthManager::smAuthManTag = QObject::tr( "Authentication Manager" );
