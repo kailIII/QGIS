@@ -68,6 +68,9 @@ class QgsAuthManager : QObject
 
     void masterPasswordVerified( bool verified ) const;
 
+  public slots:
+    void removeCachedConfig( const QString& authid );
+
   protected:
     explicit QgsAuthManager( QObject *parent = 0 );
     ~QgsAuthManager();

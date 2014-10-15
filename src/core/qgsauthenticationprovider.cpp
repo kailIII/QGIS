@@ -115,6 +115,11 @@ void QgsAuthProviderBasic::removeAuthBasicConfig( const QString& authid )
   }
 }
 
+void QgsAuthProviderBasic::removeCachedConfig( const QString& authid )
+{
+  Q_UNUSED( authid );
+}
+
 
 #ifndef QT_NO_OPENSSL
 
@@ -254,6 +259,18 @@ void QgsAuthProviderPkiPaths::updateNetworkReply( QNetworkReply *reply, const QS
     QgsDebugMsg( QString( "Adding self-signed cert expected ssl error for %1 for authid: %2" ).arg( issuer ).arg( authid ) );
     expectedSslErrors.append( error );
     reply->ignoreSslErrors( expectedSslErrors );
+  }
+}
+
+void QgsAuthProviderPkiPaths::removeCachedConfig( const QString& authid )
+{
+  QgsPkiPathsBundle * pkibundle = 0;
+  // check if it is cached
+  if ( mPkiPathsBundleCache.contains( authid ) )
+  {
+    pkibundle = mPkiPathsBundleCache.take( authid );
+    delete pkibundle;
+    pkibundle = 0;
   }
 }
 

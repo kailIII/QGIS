@@ -168,7 +168,7 @@ IF(NOT WIN32 AND NOT ANDROID)
 ENDIF(NOT WIN32 AND NOT ANDROID)
 
 # required
-FIND_PACKAGE(Cryptopp REQUIRED) # master password hash and authentication encryption
+FIND_PACKAGE(QCA2 REQUIRED) # master password hash and authentication encryption
 FIND_PACKAGE(Proj)
 FIND_PACKAGE(GEOS)
 FIND_PACKAGE(GDAL)

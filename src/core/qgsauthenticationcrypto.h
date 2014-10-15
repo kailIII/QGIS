@@ -7,19 +7,25 @@ class CORE_EXPORT QgsAuthCrypto
 {
 
   public:
-    static const QString encrypt( QString pass, QString text, QString cipher );
+    static const QString encrypt( QString pass, QString cipheriv, QString text );
 
-    static const QString decrypt( QString pass, QString text, QString cipher );
+    static const QString decrypt( QString pass, QString cipheriv, QString text );
 
-    static void passwordHash( const QString &pass , QString *salt, QString *hash );
+    static void passwordKeyHash( const QString &pass,
+                                 QString *salt,
+                                 QString *hash,
+                                 QString *cipheriv = 0 );
 
-    static bool verifyPasswordHash( const QString& pass,
-                                    const QString& salt,
-                                    const QString& hash,
-                                    QString *hashderived = 0 );
+    static bool verifyPasswordKeyHash( const QString& pass,
+                                       const QString& salt,
+                                       const QString& hash,
+                                       QString *hashderived = 0 );
 
   private:
-    static QString encryption( QString passstr, QString textstr, QString ciphername, bool encrypt );
+    static QString encryptdecrypt( QString passstr,
+                                   QString cipheriv,
+                                   QString textstr,
+                                   bool encrypt );
 };
 
 #endif  // QGSAUTHENTICATIONCRYPTO_H

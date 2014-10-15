@@ -8,6 +8,8 @@
 #include <QTime>
 #include <QVariant>
 
+#include <QtCrypto>
+
 #include "qgsapplication.h"
 #include "qgsauthenticationcrypto.h"
 #include "qgsauthenticationprovider.h"
@@ -49,6 +51,18 @@ QSqlDatabase QgsAuthManager::authDbConnection() const
 
 bool QgsAuthManager::init()
 {
+  qDebug( "Initializing QCA..." );
+  mQcaInitializer = new QCA::Initializer( QCA::Practical, 256 );
+
+  qDebug( "QCA initialized." );
+  QCA::scanForPlugins();
+
+  qDebug( "QCA Plugin Diagnostics Context: %s", QCA::pluginDiagnosticText().toUtf8().constData() );
+  QStringList capabilities;
+
+  capabilities = QCA::supportedFeatures();
+  qDebug( "QCA supports: %s", capabilities.join( "," ).toUtf8().constData() );
+
   registerProviders();
 
   QFileInfo dbinfo( QgsApplication::qgisAuthDbFilePath() );
@@ -82,7 +96,8 @@ bool QgsAuthManager::init()
   QString qstr;
 
   qstr = QString( "CREATE TABLE %1 (\n"
-                  "    'salt' TEXT NOT NULL\n"
+                  "    'salt' TEXT NOT NULL,\n"
+                  "    'civ' TEXT NOT NULL\n"
                   ", 'hash' TEXT  NOT NULL);" ).arg( authDbPassTable() );
   query.prepare( qstr );
   if ( !authDbQuery( &query ) )
@@ -426,7 +441,7 @@ bool QgsAuthManager::storeAuthenticationConfig( QgsAuthConfigBase &config )
   query.bindValue( ":uri", config.uri() );
   query.bindValue( ":type", config.typeToString() );
   query.bindValue( ":version", config.version() );
-  query.bindValue( ":config", QgsAuthCrypto::encrypt( mMasterPass, configstring, "AES" ) );
+  query.bindValue( ":config", QgsAuthCrypto::encrypt( mMasterPass, masterPasswordCiv(), configstring ) );
 
   if ( !authDbStartTransaction() )
     return false;
@@ -492,7 +507,7 @@ bool QgsAuthManager::updateAuthenticationConfig( const QgsAuthConfigBase& config
   query.bindValue( ":uri", config.uri() );
   query.bindValue( ":type", config.typeToString() );
   query.bindValue( ":version", config.version() );
-  query.bindValue( ":config", QgsAuthCrypto::encrypt( mMasterPass, configstring, "AES" ) );
+  query.bindValue( ":config", QgsAuthCrypto::encrypt( mMasterPass, masterPasswordCiv(), configstring ) );
 
   if ( !authDbStartTransaction() )
     return false;
@@ -502,6 +517,9 @@ bool QgsAuthManager::updateAuthenticationConfig( const QgsAuthConfigBase& config
 
   if ( !authDbCommit() )
     return false;
+
+  // should come before updating provider types, in case user switched providers in config
+  removeCachedConfig( config.id() );
 
   updateConfigProviderTypes();
 
@@ -547,7 +565,7 @@ bool QgsAuthManager::loadAuthenticationConfig( const QString& authid, QgsAuthCon
 
       if ( full )
       {
-        config.loadConfigString( QgsAuthCrypto::decrypt( mMasterPass, query.value( 5 ).toString(), "AES" ) );
+        config.loadConfigString( QgsAuthCrypto::decrypt( mMasterPass, masterPasswordCiv(), query.value( 5 ).toString() ) );
       }
 
       emit messageOut( QString( "Load %1 config SUCCESS for authid: %2" ).arg( full ? "full" : "base" ) .arg( authid ) );
@@ -582,6 +600,8 @@ bool QgsAuthManager::removeAuthenticationConfig( const QString& authid )
   if ( !authDbCommit() )
     return false;
 
+  removeCachedConfig( authid );
+
   updateConfigProviderTypes();
 
   emit messageOut( QString( "REMOVED config for authid: %1" ).arg( authid ) );
@@ -608,6 +628,15 @@ void QgsAuthManager::updateNetworkReply( QNetworkReply *reply, const QString& au
   if ( provider )
   {
     provider->updateNetworkReply( reply , authid );
+  }
+}
+
+void QgsAuthManager::removeCachedConfig( const QString& authid )
+{
+  QgsAuthProvider* provider = configProvider( authid );
+  if ( provider )
+  {
+    provider->removeCachedConfig( authid );
   }
 }
 
@@ -643,6 +672,7 @@ void QgsAuthManager::writeDebug( const QString &message,
 
 QgsAuthManager::QgsAuthManager( QObject *parent )
     : QObject( parent )
+    , mQcaInitializer( 0 )
     , mProvidersRegistered( false )
     , mMasterPass( QString() )
     , mMasterPassReset( QString() )
@@ -653,7 +683,10 @@ QgsAuthManager::QgsAuthManager( QObject *parent )
 
 QgsAuthManager::~QgsAuthManager()
 {
+  authDbConnection().close();
   qDeleteAll( mProviders.values() );
+  delete mQcaInitializer;
+  mQcaInitializer = 0;
 }
 
 bool QgsAuthManager::masterPasswordInput()
@@ -702,7 +735,6 @@ bool QgsAuthManager::masterPasswordRowsInDb( int *rows ) const
     *rows = query.value( 0 ).toInt();
   }
 
-  query.clear();
   return ok;
 }
 
@@ -721,21 +753,20 @@ bool QgsAuthManager::masterPasswordCheckAgainstDb() const
   QString salt = query.value( 0 ).toString();
   QString hash = query.value( 1 ).toString();
 
-  query.clear();
-
-  return QgsAuthCrypto::verifyPasswordHash( mMasterPass, salt, hash );
+  return QgsAuthCrypto::verifyPasswordKeyHash( mMasterPass, salt, hash );
 }
 
 bool QgsAuthManager::masterPasswordStoreInDb() const
 {
-  QString salt, hash;
-  QgsAuthCrypto::passwordHash( mMasterPass, &salt, &hash );
+  QString salt, hash, civ;
+  QgsAuthCrypto::passwordKeyHash( mMasterPass, &salt, &hash, &civ );
 
   QSqlQuery query( authDbConnection() );
-  query.prepare( QString( "INSERT INTO %1 (salt, hash) VALUES (:salt, :hash)" ).arg( authDbPassTable() ) );
+  query.prepare( QString( "INSERT INTO %1 (salt, hash, civ) VALUES (:salt, :hash, :civ)" ).arg( authDbPassTable() ) );
 
   query.bindValue( ":salt", salt );
   query.bindValue( ":hash", hash );
+  query.bindValue( ":civ", civ );
 
   if ( !authDbStartTransaction() )
     return false;
@@ -754,6 +785,19 @@ bool QgsAuthManager::masterPasswordClearDb() const
   QSqlQuery query( authDbConnection() );
   query.prepare( QString( "DELETE FROM %1" ).arg( authDbPassTable() ) );
   return authDbTransactionQuery( &query );
+}
+
+const QString QgsAuthManager::masterPasswordCiv() const
+{
+  QSqlQuery query( authDbConnection() );
+  query.prepare( QString( "SELECT civ FROM %1" ).arg( authDbPassTable() ) );
+  if ( !authDbQuery( &query ) )
+    return QString();
+
+  if ( !query.first() )
+    return QString();
+
+  return query.value( 0 ).toString();
 }
 
 QStringList QgsAuthManager::configIds() const
