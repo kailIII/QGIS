@@ -10,9 +10,11 @@
 #include <QStringList>
 
 #include "qgsauthenticationconfig.h"
-#include "qgsauthenticationprovider.h"
-//#include "qgsauthenticationcrypto.h"
 
+namespace QCA
+{
+    class Initializer;
+}
 class QgsAuthProvider;
 
 class CORE_EXPORT QgsAuthManager : public QObject
@@ -80,6 +82,9 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     void masterPasswordVerified( bool verified ) const;
 
+  public slots:
+    void removeCachedConfig( const QString& authid );
+
   private slots:
     void writeDebug( const QString& message, const QString& tag = QString(), MessageLevel level = INFO );
 
@@ -101,6 +106,7 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     bool masterPasswordClearDb() const;
 
+    const QString masterPasswordCiv() const;
 
     QStringList configIds() const;
 
@@ -122,6 +128,8 @@ class CORE_EXPORT QgsAuthManager : public QObject
     static const QString smAuthConfigTable;
     static const QString smAuthPassTable;
     static const QString smAuthManTag;
+
+    QCA::Initializer * mQcaInitializer;
 
     QHash<QString, QgsAuthType::ProviderType> mConfigProviders;
     QHash<QgsAuthType::ProviderType, QgsAuthProvider*> mProviders;
