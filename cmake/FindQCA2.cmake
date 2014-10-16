@@ -29,9 +29,9 @@ else(QCA2_INCLUDE_DIR AND QCA2_LIBRARY)
     include(CMakeFindFrameworks)
     cmake_find_frameworks(qca)
     if (qca_FRAMEWORKS)
-       set(QCA2_LIBRARY "-framework qca -L${qca_FRAMEWORKS}" CACHE FILEPATH "QCA framework" FORCE)
-       set(QCA2_INCLUDE_DIR "${qca_FRAMEWORKS}/Headers" CACHE FILEPATH "QCA framework headers" FORCE)
-       set(QCA2_FOUND TRUE)
+      set(QCA2_LIBRARY "-framework qca -L${qca_FRAMEWORKS}" CACHE FILEPATH "QCA framework" FORCE)
+      set(QCA2_INCLUDE_DIR "${qca_FRAMEWORKS}/Headers" CACHE FILEPATH "QCA framework headers" FORCE)
+      set(QCA2_FOUND TRUE)
     endif (qca_FRAMEWORKS)
 
   endif(APPLE)
@@ -47,14 +47,26 @@ else(QCA2_INCLUDE_DIR AND QCA2_LIBRARY)
     endif(NOT WIN32)
 
     find_library(QCA2_LIBRARY
-                 WIN32_DEBUG_POSTFIX d
-                 NAMES qca
-                 HINTS ${PC_QCA2_LIBDIR} ${PC_QCA2_LIBRARY_DIRS}
-                 )
+      WIN32_DEBUG_POSTFIX d
+      NAMES qca qca2
+      PATHS
+        ${LIB_DIR}
+        $ENV{LIB}
+        "$ENV{LIB_DIR}"
+        /usr/local/lib
+      HINTS ${PC_QCA2_LIBDIR} ${PC_QCA2_LIBRARY_DIRS}
+    )
 
-    find_path(QCA2_INCLUDE_DIR QtCrypto
-              HINTS ${PC_QCA2_INCLUDEDIR} ${PC_QCA2_INCLUDE_DIRS}
-              PATH_SUFFIXES QtCrypto)
+    find_path(QCA2_INCLUDE_DIR
+      NAMES QtCrypto
+      PATHS
+        ${LIB_DIR}/include
+        "$ENV{LIB_DIR}/include"
+        $ENV{INCLUDE}
+        /usr/local/include
+      HINTS ${PC_QCA2_INCLUDEDIR} ${PC_QCA2_INCLUDE_DIRS}
+      PATH_SUFFIXES QtCrypto qt4/QtCrypto
+    )
 
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(QCA2  DEFAULT_MSG  QCA2_LIBRARY QCA2_INCLUDE_DIR)
