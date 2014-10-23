@@ -128,6 +128,9 @@ void QgsCredentialDialog::requestCredentialsMasterPassword( QString * password, 
     }
   }
 
+  // don't leave master password in singleton's text field
+  leMasterPass->clear();
+
   QApplication::restoreOverrideCursor();
 }
 
