@@ -26,6 +26,10 @@ class QgsAuthManager : QObject
 
     bool setMasterPassword( bool verify = false );
 
+    bool setMasterPassword( const QString& pass, bool verify = false );
+
+    bool verifyMasterPassword();
+
     bool masterPasswordIsSet() const;
 
     void clearMasterPassword();

@@ -149,6 +149,31 @@ bool QgsAuthManager::setMasterPassword( bool verify )
       return true;
   }
 
+  if ( !verifyMasterPassword() )
+    return false;
+
+  emit messageOut( "Master password: SUCCESS, verified and ready" );
+  return true;
+}
+
+bool QgsAuthManager::setMasterPassword( const QString& pass, bool verify )
+{
+  // since this is generally for automation, we don't care if passed-in is same as existing
+  QString prevpass = QString( mMasterPass );
+  mMasterPass = pass;
+  if ( verify && !verifyMasterPassword() )
+  {
+    mMasterPass = prevpass;
+    emit messageOut( "Master password: FAILED, reset to previous" );
+    return false;
+  }
+
+  emit messageOut( "Master password: SUCCESS, verified and ready" );
+  return true;
+}
+
+bool QgsAuthManager::verifyMasterPassword()
+{
   int rows = 0;
   if ( !masterPasswordRowsInDb( &rows ) )
   {
@@ -212,7 +237,6 @@ bool QgsAuthManager::setMasterPassword( bool verify )
     }
   }
 
-  emit messageOut( "Master password: SUCCESS, verified and ready" );
   return true;
 }
 

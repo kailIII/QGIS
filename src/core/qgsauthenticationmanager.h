@@ -13,7 +13,7 @@
 
 namespace QCA
 {
-    class Initializer;
+  class Initializer;
 }
 class QgsAuthProvider;
 
@@ -39,6 +39,10 @@ class CORE_EXPORT QgsAuthManager : public QObject
     bool init();
 
     bool setMasterPassword( bool verify = false );
+
+    bool setMasterPassword( const QString& pass, bool verify = false );
+
+    bool verifyMasterPassword();
 
     bool masterPasswordIsSet() const;
 
