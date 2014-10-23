@@ -20,6 +20,8 @@ class QgsAuthProvider;
 class CORE_EXPORT QgsAuthManager : public QObject
 {
     Q_OBJECT
+    Q_ENUMS( MessageLevel )
+
   public:
 
     // TODO: switch to QgsMessageLog enum
@@ -82,7 +84,7 @@ class CORE_EXPORT QgsAuthManager : public QObject
     void updateNetworkReply( QNetworkReply *reply, const QString& authid );
 
   signals:
-    void messageOut( const QString& message, const QString& tag = smAuthManTag, MessageLevel level = INFO ) const;
+    void messageOut( const QString& message, const QString& tag = smAuthManTag, QgsAuthManager::MessageLevel level = INFO ) const;
 
     void masterPasswordVerified( bool verified ) const;
 
@@ -90,7 +92,7 @@ class CORE_EXPORT QgsAuthManager : public QObject
     void removeCachedConfig( const QString& authid );
 
   private slots:
-    void writeDebug( const QString& message, const QString& tag = QString(), MessageLevel level = INFO );
+    void writeToConsole( const QString& message, const QString& tag = QString(), QgsAuthManager::MessageLevel level = INFO );
 
   protected:
     explicit QgsAuthManager( QObject *parent = 0 );

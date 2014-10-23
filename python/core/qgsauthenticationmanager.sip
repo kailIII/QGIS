@@ -68,7 +68,7 @@ class QgsAuthManager : QObject
     void updateNetworkReply( QNetworkReply *reply, const QString& authid );
 
   signals:
-    void messageOut( const QString& message, const QString& tag = smAuthManTag, MessageLevel level = INFO ) const;
+    void messageOut( const QString& message, const QString& tag = smAuthManTag, QgsAuthManager::MessageLevel level = INFO ) const;
 
     void masterPasswordVerified( bool verified ) const;
 

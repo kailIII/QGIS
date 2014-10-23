@@ -543,6 +543,8 @@ QgisApp::QgisApp( QSplashScreen *splash, bool restorePlugins, QWidget * parent, 
 
   namSetup();
 
+  masterPasswordSetup();
+
   // load GUI: actions, menus, toolbars
   setupUi( this );
 
@@ -10043,6 +10045,22 @@ void QgisApp::namRequestTimedOut( QNetworkReply *reply )
 void QgisApp::namUpdate()
 {
   QgsNetworkAccessManager::instance()->setupDefaultProxyAndCache();
+}
+
+void QgisApp::masterPasswordSetup()
+{
+  connect( QgsAuthManager::instance(), SIGNAL( messageOut( const QString&, const QString&, QgsAuthManager::MessageLevel ) ),
+           this, SLOT( authMessageOut( const QString&, const QString&, QgsAuthManager::MessageLevel ) ) );
+}
+
+void QgisApp::authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level )
+{
+  // only show WARNING and CRITICAL messages
+  if ( level == QgsAuthManager::INFO )
+    return;
+
+  int levelint = ( int )level;
+  messageBar()->pushMessage( authtag, message, ( QgsMessageBar::MessageLevel )levelint, 7 );
 }
 
 void QgisApp::completeInitialization()
