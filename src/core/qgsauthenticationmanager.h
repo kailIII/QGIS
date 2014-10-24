@@ -24,7 +24,6 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
   public:
 
-    // TODO: switch to QgsMessageLog enum
     enum MessageLevel
     {
       INFO = 0,
@@ -80,6 +79,10 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     bool removeAuthenticationConfig( const QString& authid );
 
+    bool clearAllAuthenticationConfigs();
+
+    bool clearAuthenticationDatabase();
+
 
     void updateNetworkRequest( QNetworkRequest &request, const QString& authid );
 
@@ -112,7 +115,7 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     bool masterPasswordStoreInDb() const;
 
-    bool masterPasswordClearDb() const;
+    bool masterPasswordClearDb();
 
     const QString masterPasswordCiv() const;
 

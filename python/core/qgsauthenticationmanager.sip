@@ -8,7 +8,6 @@ class QgsAuthManager : QObject
 
   public:
 
-    // TODO: switch to QgsMessageLog enum
     enum MessageLevel
     {
       INFO = 0,
@@ -38,6 +37,8 @@ class QgsAuthManager : QObject
 
     bool resetMasterPassword();
 
+    const QString authManTag() const;
+
 
     void registerProviders();
 
@@ -62,6 +63,9 @@ class QgsAuthManager : QObject
 
     bool removeAuthenticationConfig( const QString& authid );
 
+    bool clearAllAuthenticationConfigs();
+
+    bool clearAuthenticationDatabase();
 
     void updateNetworkRequest( QNetworkRequest &request /In,Out/, const QString& authid );
 

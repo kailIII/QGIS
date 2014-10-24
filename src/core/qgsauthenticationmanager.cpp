@@ -656,6 +656,18 @@ bool QgsAuthManager::removeAuthenticationConfig( const QString& authid )
   return true;
 }
 
+bool QgsAuthManager::clearAllAuthenticationConfigs()
+{
+  QSqlQuery query( authDbConnection() );
+  query.prepare( QString( "DELETE FROM %1" ).arg( authDbConfigTable() ) );
+  return authDbTransactionQuery( &query );
+}
+
+bool QgsAuthManager::clearAuthenticationDatabase()
+{
+  return ( clearAllAuthenticationConfigs() && masterPasswordClearDb() );
+}
+
 void QgsAuthManager::updateNetworkRequest( QNetworkRequest &request, const QString& authid )
 {
   QgsAuthProvider* provider = configProvider( authid );
@@ -825,11 +837,14 @@ bool QgsAuthManager::masterPasswordStoreInDb() const
   return true;
 }
 
-bool QgsAuthManager::masterPasswordClearDb() const
+bool QgsAuthManager::masterPasswordClearDb()
 {
   QSqlQuery query( authDbConnection() );
   query.prepare( QString( "DELETE FROM %1" ).arg( authDbPassTable() ) );
-  return authDbTransactionQuery( &query );
+  bool res = authDbTransactionQuery( &query );
+  if ( res )
+    clearMasterPassword();
+  return res;
 }
 
 const QString QgsAuthManager::masterPasswordCiv() const

@@ -5,6 +5,7 @@
 #include <QWidget>
 
 #include "ui_qgsauthenticationconfigeditor.h"
+#include "qgsauthenticationmanager.h"
 
 class GUI_EXPORT QgsAuthConfigEditor : public QWidget, private Ui::QgsAuthConfigEditor
 {
@@ -17,6 +18,8 @@ class GUI_EXPORT QgsAuthConfigEditor : public QWidget, private Ui::QgsAuthConfig
     void toggleTitleVisibility( bool visible );
 
   private slots:
+    void authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level );
+
     void selectionChanged( const QItemSelection& selected, const QItemSelection& deselected );
 
     void checkSelection();

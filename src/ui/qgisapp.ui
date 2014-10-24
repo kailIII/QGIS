@@ -39,29 +39,10 @@
       <string>New From Template</string>
      </property>
     </widget>
-    <widget class="QMenu" name="mAuthenticationMenu">
-     <property name="title">
-      <string>Authentication</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../../images/images.qrc">
-       <normaloff>:/images/themes/default/locked.svg</normaloff>:/images/themes/default/locked.svg</iconset>
-     </property>
-     <addaction name="mActionSetMasterPassword"/>
-     <addaction name="mActionClearCachedMasterPassword"/>
-     <addaction name="mActionResetMasterPassword"/>
-     <addaction name="separator"/>
-     <addaction name="mActionEditAuthenticationConfigs"/>
-     <addaction name="mActionClearAuthenticationConfigs"/>
-     <addaction name="separator"/>
-     <addaction name="mActionEraseAuthenticationDatabase"/>
-    </widget>
     <addaction name="mActionNewProject"/>
     <addaction name="mActionOpenProject"/>
     <addaction name="mProjectFromTemplateMenu"/>
     <addaction name="mRecentProjectsMenu"/>
-    <addaction name="separator"/>
-    <addaction name="mAuthenticationMenu"/>
     <addaction name="separator"/>
     <addaction name="mActionSaveProject"/>
     <addaction name="mActionSaveProjectAs"/>
@@ -224,12 +205,30 @@
     <property name="title">
      <string>&amp;Settings</string>
     </property>
+    <widget class="QMenu" name="mAuthenticationMenu">
+     <property name="title">
+      <string>Authentication</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../../images/images.qrc">
+       <normaloff>:/images/themes/default/locked.svg</normaloff>:/images/themes/default/locked.svg</iconset>
+     </property>
+     <addaction name="mActionSetMasterPassword"/>
+     <addaction name="mActionClearCachedMasterPassword"/>
+     <addaction name="mActionResetMasterPassword"/>
+     <addaction name="separator"/>
+     <addaction name="mActionEditAuthenticationConfigs"/>
+     <addaction name="mActionClearAuthenticationConfigs"/>
+     <addaction name="separator"/>
+     <addaction name="mActionEraseAuthenticationDatabase"/>
+    </widget>
     <addaction name="mActionProjectProperties"/>
     <addaction name="mActionCustomProjection"/>
     <addaction name="mActionStyleManagerV2"/>
     <addaction name="mActionConfigureShortcuts"/>
     <addaction name="mActionCustomization"/>
     <addaction name="mActionOptions"/>
+    <addaction name="mAuthenticationMenu"/>
     <addaction name="mActionSnappingOptions"/>
    </widget>
    <widget class="QMenu" name="mRasterMenu">

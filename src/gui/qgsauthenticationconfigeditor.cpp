@@ -33,11 +33,17 @@ QgsAuthConfigEditor::QgsAuthConfigEditor( QWidget *parent )
   tableViewConfigs->hideColumn( 4 );
   tableViewConfigs->hideColumn( 5 );
 
+  tableViewConfigs->sortByColumn( 1, Qt::AscendingOrder );
+  tableViewConfigs->setSortingEnabled( true );
+
   connect( tableViewConfigs->selectionModel(), SIGNAL( selectionChanged( const QItemSelection&, const QItemSelection& ) ),
            this, SLOT( selectionChanged( const QItemSelection&, const QItemSelection& ) ) );
 
   connect( tableViewConfigs, SIGNAL( doubleClicked( QModelIndex ) ),
            this, SLOT( on_btnEditConfig_clicked() ) );
+
+  connect( QgsAuthManager::instance(), SIGNAL( messageOut( const QString&, const QString&, QgsAuthManager::MessageLevel ) ),
+           this, SLOT( authMessageOut( const QString&, const QString&, QgsAuthManager::MessageLevel ) ) );
 
   checkSelection();
 }
@@ -46,7 +52,17 @@ QgsAuthConfigEditor::~QgsAuthConfigEditor()
 {
 }
 
-void QgsAuthConfigEditor::toggleTitleVisibility(bool visible)
+void QgsAuthConfigEditor::authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level )
+{
+  // only show WARNING and CRITICAL messages
+  if ( level == QgsAuthManager::INFO )
+    return;
+
+  int levelint = ( int )level;
+  msgBar->pushMessage( authtag, message, ( QgsMessageBar::MessageLevel )levelint, 7 );
+}
+
+void QgsAuthConfigEditor::toggleTitleVisibility( bool visible )
 {
   lblAuthConfigDb->setVisible( visible );
 }

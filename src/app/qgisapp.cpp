@@ -10093,7 +10093,16 @@ void QgisApp::clearCachedMasterPassword()
 
 void QgisApp::resetMasterPassword()
 {
+  QString msg( tr( "Master password reset" ) );
+  QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
 
+  if ( !QgsAuthManager::instance()->resetMasterPassword() )
+  {
+    msg = tr( "Master password FAILED to be reset" );
+    level = QgsMessageBar::WARNING;
+  }
+
+  messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, messageTimeout() );
 }
 
 void QgisApp::editAuthenticationConfigs()
@@ -10112,16 +10121,47 @@ void QgisApp::clearAuthenticationConfigs()
     return;
   }
 
+  QString msg( tr( "Authentication configurations cleared" ) );
+  QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
 
+  if ( !QgsAuthManager::instance()->clearAllAuthenticationConfigs() )
+  {
+    msg = tr( "Authentication configurations FAILED to be cleared" );
+    level = QgsMessageBar::WARNING;
+  }
+
+  messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, messageTimeout() );
 }
 
 void QgisApp::clearAuthenticationDatabase()
 {
+  if ( QMessageBox::warning( this,
+                             tr( "Erase Database" ),
+                             tr( "Are you sure you want to erase the entire authentication database?\n\n"
+                                 "Operation can NOT be undone!" ),
+                             QMessageBox::Ok | QMessageBox::Cancel ) == QMessageBox::Cancel )
+  {
+    return;
+  }
 
+  QString msg( tr( "Authentication database erased" ) );
+  QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
+
+  if ( !QgsAuthManager::instance()->clearAuthenticationDatabase() )
+  {
+    msg = tr( "Authentication database FAILED to be erased" );
+    level = QgsMessageBar::WARNING;
+  }
+
+  messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, messageTimeout() );
 }
 
 void QgisApp::authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level )
 {
+  // only if main window is active window
+  if ( qApp->activeWindow() != this )
+    return;
+
   // only show WARNING and CRITICAL messages
   if ( level == QgsAuthManager::INFO )
     return;
