@@ -795,6 +795,20 @@ bool QgsAuthManager::masterPasswordRowsInDb( int *rows ) const
   return ok;
 }
 
+bool QgsAuthManager::masterPasswordHashInDb() const
+{
+  int rows = 0;
+  if ( !masterPasswordRowsInDb( &rows ) )
+  {
+    const char* err = QT_TR_NOOP( "Master password: FAILED to access auth db" );
+    QgsDebugMsg( err );
+    emit messageOut( tr( err ), authManTag(), CRITICAL );
+
+    return false;
+  }
+  return ( rows == 1 );
+}
+
 bool QgsAuthManager::masterPasswordCheckAgainstDb() const
 {
   // first verify there is only one row in auth db (uses first found)

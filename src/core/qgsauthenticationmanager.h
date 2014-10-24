@@ -111,6 +111,8 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     bool masterPasswordRowsInDb( int *rows ) const;
 
+    bool masterPasswordHashInDb() const;
+
     bool masterPasswordCheckAgainstDb() const;
 
     bool masterPasswordStoreInDb() const;
