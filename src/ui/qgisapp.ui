@@ -17,7 +17,7 @@
      <x>0</x>
      <y>0</y>
      <width>1050</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="mProjectMenu">
@@ -39,10 +39,29 @@
       <string>New From Template</string>
      </property>
     </widget>
+    <widget class="QMenu" name="mAuthenticationMenu">
+     <property name="title">
+      <string>Authentication</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../../images/images.qrc">
+       <normaloff>:/images/themes/default/locked.svg</normaloff>:/images/themes/default/locked.svg</iconset>
+     </property>
+     <addaction name="mActionSetMasterPassword"/>
+     <addaction name="mActionClearCachedMasterPassword"/>
+     <addaction name="mActionResetMasterPassword"/>
+     <addaction name="separator"/>
+     <addaction name="mActionEditAuthenticationConfigs"/>
+     <addaction name="mActionClearAuthenticationConfigs"/>
+     <addaction name="separator"/>
+     <addaction name="mActionEraseAuthenticationDatabase"/>
+    </widget>
     <addaction name="mActionNewProject"/>
     <addaction name="mActionOpenProject"/>
     <addaction name="mProjectFromTemplateMenu"/>
     <addaction name="mRecentProjectsMenu"/>
+    <addaction name="separator"/>
+    <addaction name="mAuthenticationMenu"/>
     <addaction name="separator"/>
     <addaction name="mActionSaveProject"/>
     <addaction name="mActionSaveProjectAs"/>
@@ -2240,6 +2259,36 @@ Acts on currently active editable layer</string>
   <action name="mActionSetLayerScaleVisibility">
    <property name="text">
     <string>Set Scale Visibility of Layer(s)</string>
+   </property>
+  </action>
+  <action name="mActionClearCachedMasterPassword">
+   <property name="text">
+    <string>Clear cached master password</string>
+   </property>
+  </action>
+  <action name="mActionSetMasterPassword">
+   <property name="text">
+    <string>Input master password</string>
+   </property>
+  </action>
+  <action name="mActionEraseAuthenticationDatabase">
+   <property name="text">
+    <string>Erase authentication database</string>
+   </property>
+  </action>
+  <action name="mActionResetMasterPassword">
+   <property name="text">
+    <string>Reset master password</string>
+   </property>
+  </action>
+  <action name="mActionClearAuthenticationConfigs">
+   <property name="text">
+    <string>Clear authentication configurations</string>
+   </property>
+  </action>
+  <action name="mActionEditAuthenticationConfigs">
+   <property name="text">
+    <string>Edit authentication configurations</string>
    </property>
   </action>
  </widget>

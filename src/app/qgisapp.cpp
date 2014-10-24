@@ -1069,6 +1069,13 @@ void QgisApp::createActions()
   connect( mActionExit, SIGNAL( triggered() ), this, SLOT( fileExit() ) );
   connect( mActionDxfExport, SIGNAL( triggered() ), this, SLOT( dxfExport() ) );
 
+  connect( mActionSetMasterPassword, SIGNAL( triggered() ), this, SLOT( setMasterPassword() ) );
+  connect( mActionClearCachedMasterPassword, SIGNAL( triggered() ), this, SLOT( clearCachedMasterPassword() ) );
+  connect( mActionResetMasterPassword, SIGNAL( triggered() ), this, SLOT( resetMasterPassword() ) );
+  connect( mActionEditAuthenticationConfigs, SIGNAL( triggered() ), this, SLOT( editAuthenticationConfigs() ) );
+  connect( mActionClearAuthenticationConfigs, SIGNAL( triggered() ), this, SLOT( clearAuthenticationConfigs() ) );
+  connect( mActionEraseAuthenticationDatabase, SIGNAL( triggered() ), this, SLOT( clearAuthenticationDatabase() ) );
+
   // Edit Menu Items
 
   connect( mActionUndo, SIGNAL( triggered() ), mUndoWidget, SLOT( undo() ) );
@@ -10051,6 +10058,66 @@ void QgisApp::masterPasswordSetup()
 {
   connect( QgsAuthManager::instance(), SIGNAL( messageOut( const QString&, const QString&, QgsAuthManager::MessageLevel ) ),
            this, SLOT( authMessageOut( const QString&, const QString&, QgsAuthManager::MessageLevel ) ) );
+}
+
+void QgisApp::setMasterPassword()
+{
+  if ( QgsAuthManager::instance()->masterPasswordIsSet() )
+  {
+    messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(),
+                               tr( "Master password already set" ),
+                               QgsMessageBar::INFO, messageTimeout() );
+    return;
+  }
+  QgsAuthManager::instance()->setMasterPassword( true );
+}
+
+void QgisApp::clearCachedMasterPassword()
+{
+  QString msg( tr( "Master password not cleared because it is not set" ) );
+  QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
+
+  if ( QgsAuthManager::instance()->masterPasswordIsSet() )
+  {
+    QgsAuthManager::instance()->clearMasterPassword();
+    msg = tr( "Master password cleared (NOTE: network connections may be cached)" );
+    if ( QgsAuthManager::instance()->masterPasswordIsSet() )
+    {
+      msg = tr( "Master password FAILED to be cleared" );
+      level = QgsMessageBar::WARNING;
+    }
+  }
+
+  messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, messageTimeout() );
+}
+
+void QgisApp::resetMasterPassword()
+{
+
+}
+
+void QgisApp::editAuthenticationConfigs()
+{
+  showOptionsDialog( this, QString( "mOptionsPageAuth" ) );
+}
+
+void QgisApp::clearAuthenticationConfigs()
+{
+  if ( QMessageBox::warning( this,
+                             tr( "Clear Configurations" ),
+                             tr( "Are you sure you want to clear ALL authentication configurations?\n\n"
+                                 "Operation can NOT be undone!" ),
+                             QMessageBox::Ok | QMessageBox::Cancel ) == QMessageBox::Cancel )
+  {
+    return;
+  }
+
+
+}
+
+void QgisApp::clearAuthenticationDatabase()
+{
+
 }
 
 void QgisApp::authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level )

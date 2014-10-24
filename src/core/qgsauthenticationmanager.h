@@ -54,6 +54,8 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     bool resetMasterPassword();
 
+    const QString authManTag() const { return smAuthManTag; }
+
 
     void registerProviders();
 
@@ -128,7 +130,6 @@ class CORE_EXPORT QgsAuthManager : public QObject
     bool authDbTransactionQuery( QSqlQuery *query ) const;
 
     const QString authDbPassTable() const { return smAuthPassTable; }
-    const QString authManTag() const { return smAuthManTag; }
 
     static QgsAuthManager* smInstance;
     static const QString smAuthConfigTable;

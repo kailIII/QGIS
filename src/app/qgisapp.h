@@ -621,7 +621,25 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
 #endif
     void namRequestTimedOut( QNetworkReply *reply );
 
-    //! push master password output to messagebar
+    //! Sets the cached master password (and verifies it if its hash is in authentication database)
+    void setMasterPassword();
+
+    //! Clear the currently cached master password (not its hash in database)
+    void clearCachedMasterPassword();
+
+    //! Reset the cached master password, updating its hash in authentication database and reseting all existing configs to use it
+    void resetMasterPassword();
+
+    //! Open authentication configs editor (in Options)
+    void editAuthenticationConfigs();
+
+    //! Clear out all authentication configs
+    void clearAuthenticationConfigs();
+
+    //! Completely clear out the authentication database (configs and master password)
+    void clearAuthenticationDatabase();
+
+    //! Push master password output to messagebar
     void authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level );
 
     //! update default action of toolbutton
