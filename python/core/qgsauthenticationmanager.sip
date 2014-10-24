@@ -31,6 +31,8 @@ class QgsAuthManager : QObject
 
     bool masterPasswordIsSet() const;
 
+    bool masterPasswordHashInDb() const;
+
     void clearMasterPassword();
 
     bool masterPasswordSame( const QString& pass ) const;

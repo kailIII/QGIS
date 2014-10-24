@@ -10095,14 +10095,21 @@ void QgisApp::resetMasterPassword()
 {
   QString msg( tr( "Master password reset" ) );
   QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
+  int timeout( messageTimeout() );
 
-  if ( !QgsAuthManager::instance()->resetMasterPassword() )
+  QString backup;
+  if ( !QgsAuthManager::instance()->resetMasterPassword( &backup ) )
   {
     msg = tr( "Master password FAILED to be reset" );
     level = QgsMessageBar::WARNING;
   }
+  else if ( !backup.isEmpty() )
+  {
+    msg += tr( " (database backup: %1)" ).arg( backup );
+    timeout = 0; // no timeout, so user can read backup message
+  }
 
-  messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, messageTimeout() );
+  messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, timeout );
 }
 
 void QgisApp::editAuthenticationConfigs()
