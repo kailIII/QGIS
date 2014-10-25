@@ -33,6 +33,7 @@ QgsAuthConfigEditor::QgsAuthConfigEditor( QWidget *parent )
   tableViewConfigs->hideColumn( 4 );
   tableViewConfigs->hideColumn( 5 );
 
+  // sort by config 'name'
   tableViewConfigs->sortByColumn( 1, Qt::AscendingOrder );
   tableViewConfigs->setSortingEnabled( true );
 
@@ -54,8 +55,8 @@ QgsAuthConfigEditor::~QgsAuthConfigEditor()
 
 void QgsAuthConfigEditor::authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level )
 {
-  // only show WARNING and CRITICAL messages
-  if ( level == QgsAuthManager::INFO )
+  // only if this dialog is the active window
+  if ( qApp->activeWindow() != this )
     return;
 
   int levelint = ( int )level;

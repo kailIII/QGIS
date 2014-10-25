@@ -639,7 +639,7 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     //! Completely clear out the authentication database (configs and master password)
     void clearAuthenticationDatabase();
 
-    //! Push master password output to messagebar
+    //! Push authentication database functions output to messagebar
     void authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level );
 
     //! update default action of toolbutton

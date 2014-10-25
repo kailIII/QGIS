@@ -53,7 +53,7 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     bool masterPasswordSame( const QString& pass ) const;
 
-    bool resetMasterPassword( QString *backup );
+    bool resetMasterPassword( const QString& newpassword, bool keepbackup, QString *backuppath = 0 );
 
     const QString authManTag() const { return smAuthManTag; }
 
@@ -108,8 +108,6 @@ class CORE_EXPORT QgsAuthManager : public QObject
   private:
 
     bool masterPasswordInput();
-
-    bool masterPasswordResetInput( QString *newpass , bool *backup, const QString& dbbackup );
 
     bool masterPasswordRowsInDb( int *rows ) const;
 

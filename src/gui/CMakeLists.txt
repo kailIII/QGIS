@@ -126,6 +126,7 @@ qgsattributetypeloaddialog.cpp
 qgsauthenticationconfigeditor.cpp
 qgsauthenticationconfigselect.cpp
 qgsauthenticationconfigwidget.cpp
+qgsauthenticationutils.cpp
 qgsblendmodecombobox.cpp
 qgsbusyindicatordialog.cpp
 qgscharacterselectdialog.cpp
@@ -339,6 +340,7 @@ qgsattributetypeloaddialog.h
 qgsauthenticationconfigeditor.h
 qgsauthenticationconfigselect.h
 qgsauthenticationconfigwidget.h
+qgsauthenticationutils.h
 qgsblendmodecombobox.h
 qgsbusyindicatordialog.h
 qgscharacterselectdialog.h
@@ -442,6 +444,7 @@ qgsattributetypeloaddialog.h
 qgsauthenticationconfigeditor.h
 qgsauthenticationconfigselect.h
 qgsauthenticationconfigwidget.h
+qgsauthenticationutils.h
 qgsbusyindicatordialog.h
 qgscharacterselectdialog.h
 qgscollapsiblegroupbox.h

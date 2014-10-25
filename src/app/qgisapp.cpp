@@ -103,6 +103,7 @@
 #include "qgsattributeaction.h"
 #include "qgsattributetabledialog.h"
 #include "qgsauthenticationmanager.h"
+#include "qgsauthenticationutils.h"
 #include "qgsbookmarks.h"
 #include "qgsbrowserdockwidget.h"
 #include "qgsclipboard.h"
@@ -10062,54 +10063,17 @@ void QgisApp::masterPasswordSetup()
 
 void QgisApp::setMasterPassword()
 {
-  if ( QgsAuthManager::instance()->masterPasswordIsSet() )
-  {
-    messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(),
-                               tr( "Master password already set" ),
-                               QgsMessageBar::INFO, messageTimeout() );
-    return;
-  }
-  QgsAuthManager::instance()->setMasterPassword( true );
+  QgsAuthenticationUtils::setMasterPassword( messageBar(), messageTimeout() );
 }
 
 void QgisApp::clearCachedMasterPassword()
 {
-  QString msg( tr( "Master password not cleared because it is not set" ) );
-  QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
-
-  if ( QgsAuthManager::instance()->masterPasswordIsSet() )
-  {
-    QgsAuthManager::instance()->clearMasterPassword();
-    msg = tr( "Master password cleared (NOTE: network connections may be cached)" );
-    if ( QgsAuthManager::instance()->masterPasswordIsSet() )
-    {
-      msg = tr( "Master password FAILED to be cleared" );
-      level = QgsMessageBar::WARNING;
-    }
-  }
-
-  messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, messageTimeout() );
+  QgsAuthenticationUtils::clearCachedMasterPassword( messageBar(), messageTimeout() );
 }
 
 void QgisApp::resetMasterPassword()
 {
-  QString msg( tr( "Master password reset" ) );
-  QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
-  int timeout( messageTimeout() );
-
-  QString backup;
-  if ( !QgsAuthManager::instance()->resetMasterPassword( &backup ) )
-  {
-    msg = tr( "Master password FAILED to be reset" );
-    level = QgsMessageBar::WARNING;
-  }
-  else if ( !backup.isEmpty() )
-  {
-    msg += tr( " (database backup: %1)" ).arg( backup );
-    timeout = 0; // no timeout, so user can read backup message
-  }
-
-  messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, timeout );
+  QgsAuthenticationUtils::resetMasterPassword( messageBar(), messageTimeout(), this );
 }
 
 void QgisApp::editAuthenticationConfigs()
@@ -10119,58 +10083,18 @@ void QgisApp::editAuthenticationConfigs()
 
 void QgisApp::clearAuthenticationConfigs()
 {
-  if ( QMessageBox::warning( this,
-                             tr( "Clear Configurations" ),
-                             tr( "Are you sure you want to clear ALL authentication configurations?\n\n"
-                                 "Operation can NOT be undone!" ),
-                             QMessageBox::Ok | QMessageBox::Cancel ) == QMessageBox::Cancel )
-  {
-    return;
-  }
-
-  QString msg( tr( "Authentication configurations cleared" ) );
-  QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
-
-  if ( !QgsAuthManager::instance()->clearAllAuthenticationConfigs() )
-  {
-    msg = tr( "Authentication configurations FAILED to be cleared" );
-    level = QgsMessageBar::WARNING;
-  }
-
-  messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, messageTimeout() );
+  QgsAuthenticationUtils::clearAuthenticationConfigs( messageBar(), messageTimeout(), this );
 }
 
 void QgisApp::clearAuthenticationDatabase()
 {
-  if ( QMessageBox::warning( this,
-                             tr( "Erase Database" ),
-                             tr( "Are you sure you want to erase the entire authentication database?\n\n"
-                                 "Operation can NOT be undone!" ),
-                             QMessageBox::Ok | QMessageBox::Cancel ) == QMessageBox::Cancel )
-  {
-    return;
-  }
-
-  QString msg( tr( "Authentication database erased" ) );
-  QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
-
-  if ( !QgsAuthManager::instance()->clearAuthenticationDatabase() )
-  {
-    msg = tr( "Authentication database FAILED to be erased" );
-    level = QgsMessageBar::WARNING;
-  }
-
-  messageBar()->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, messageTimeout() );
+  QgsAuthenticationUtils::clearAuthenticationDatabase( messageBar(), messageTimeout(), this );
 }
 
 void QgisApp::authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level )
 {
   // only if main window is active window
   if ( qApp->activeWindow() != this )
-    return;
-
-  // only show WARNING and CRITICAL messages
-  if ( level == QgsAuthManager::INFO )
     return;
 
   int levelint = ( int )level;
