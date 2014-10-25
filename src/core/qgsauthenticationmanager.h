@@ -81,9 +81,9 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     bool removeAuthenticationConfig( const QString& authid );
 
-    bool clearAllAuthenticationConfigs();
+    bool removeAllAuthenticationConfigs();
 
-    bool clearAuthenticationDatabase();
+    bool eraseAuthenticationDatabase();
 
 
     void updateNetworkRequest( QNetworkRequest &request, const QString& authid );
@@ -96,7 +96,9 @@ class CORE_EXPORT QgsAuthManager : public QObject
     void masterPasswordVerified( bool verified ) const;
 
   public slots:
-    void removeCachedConfig( const QString& authid );
+    void clearAllCachedConfigs();
+
+    void clearCachedConfig( const QString& authid );
 
   private slots:
     void writeToConsole( const QString& message, const QString& tag = QString(), QgsAuthManager::MessageLevel level = INFO );
@@ -120,6 +122,8 @@ class CORE_EXPORT QgsAuthManager : public QObject
     const QString masterPasswordCiv() const;
 
     QStringList configIds() const;
+
+    bool verifyPasswordCanDecryptConfigs() const;
 
     bool reencryptAllAuthenticationConfigs( const QString& prevpass, const QString& prevciv );
 

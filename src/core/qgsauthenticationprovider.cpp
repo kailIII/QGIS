@@ -115,7 +115,7 @@ void QgsAuthProviderBasic::removeAuthBasicConfig( const QString& authid )
   }
 }
 
-void QgsAuthProviderBasic::removeCachedConfig( const QString& authid )
+void QgsAuthProviderBasic::clearCachedConfig( const QString& authid )
 {
   Q_UNUSED( authid );
 }
@@ -262,7 +262,7 @@ void QgsAuthProviderPkiPaths::updateNetworkReply( QNetworkReply *reply, const QS
   }
 }
 
-void QgsAuthProviderPkiPaths::removeCachedConfig( const QString& authid )
+void QgsAuthProviderPkiPaths::clearCachedConfig( const QString& authid )
 {
   QgsPkiPathsBundle * pkibundle = 0;
   // check if it is cached

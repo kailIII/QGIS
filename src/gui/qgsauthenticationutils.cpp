@@ -36,9 +36,8 @@ bool QgsMasterPasswordResetDialog::requestMasterPasswordReset( QString *password
   validatePasswords();
   leMasterPassCurrent->setFocus();
 
-  QgsDebugMsg( "exec()" );
   bool ok = ( exec() == QDialog::Accepted );
-  QgsDebugMsg( QString( "exec(): %1" ).arg( ok ? "true" : "false" ) );
+  //QgsDebugMsg( QString( "exec(): %1" ).arg( ok ? "true" : "false" ) );
 
   if ( ok )
   {
@@ -80,7 +79,7 @@ void QgsMasterPasswordResetDialog::validatePasswords()
 
 ///////////////////////////////////////////////
 
-void QgsAuthenticationUtils::setMasterPassword( QgsMessageBar *msgbar, int timeout )
+void QgsAuthUtils::setMasterPassword( QgsMessageBar *msgbar, int timeout )
 {
   if ( QgsAuthManager::instance()->masterPasswordIsSet() )
   {
@@ -92,7 +91,7 @@ void QgsAuthenticationUtils::setMasterPassword( QgsMessageBar *msgbar, int timeo
   QgsAuthManager::instance()->setMasterPassword( true );
 }
 
-void QgsAuthenticationUtils::clearCachedMasterPassword( QgsMessageBar *msgbar, int timeout )
+void QgsAuthUtils::clearCachedMasterPassword( QgsMessageBar *msgbar, int timeout )
 {
   QString msg( QObject::tr( "Master password not cleared because it is not set" ) );
   QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
@@ -111,7 +110,7 @@ void QgsAuthenticationUtils::clearCachedMasterPassword( QgsMessageBar *msgbar, i
   msgbar->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, timeout );
 }
 
-void QgsAuthenticationUtils::resetMasterPassword( QgsMessageBar *msgbar, int timeout, QWidget *parent )
+void QgsAuthUtils::resetMasterPassword( QgsMessageBar *msgbar, int timeout, QWidget *parent )
 {
   QString msg( QObject::tr( "Master password reset" ) );
   QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
@@ -138,10 +137,11 @@ void QgsAuthenticationUtils::resetMasterPassword( QgsMessageBar *msgbar, int tim
   QString backuppath;
   if ( !QgsAuthManager::instance()->resetMasterPassword( newpass, keepbackup, &backuppath ) )
   {
-    msg = QObject::tr( "Master password FAILED to be reset (failed database: %1)" ).arg( backuppath );
+    msg = QObject::tr( "Master password FAILED to be reset" );
     level = QgsMessageBar::WARNING;
   }
-  else if ( !backuppath.isEmpty() )
+
+  if ( !backuppath.isEmpty() )
   {
     msg += QObject::tr( " (database backup: %1)" ).arg( backuppath );
     timeout = 0; // no timeout, so user can read backup message
@@ -150,36 +150,45 @@ void QgsAuthenticationUtils::resetMasterPassword( QgsMessageBar *msgbar, int tim
   msgbar->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, timeout );
 }
 
-void QgsAuthenticationUtils::clearAuthenticationConfigs( QgsMessageBar *msgbar, int timeout, QWidget *parent )
+void QgsAuthUtils::clearCachedAuthenticationConfigs( QgsMessageBar *msgbar, int timeout )
+{
+  QgsAuthManager::instance()->clearAllCachedConfigs();
+  QString msg = QObject::tr( "Cached authentication configurations for session cleared" );
+  msgbar->pushMessage( QgsAuthManager::instance()->authManTag(), msg, QgsMessageBar::INFO, timeout );
+}
+
+void QgsAuthUtils::removeAuthenticationConfigs( QgsMessageBar *msgbar, int timeout, QWidget *parent )
 {
   if ( QMessageBox::warning( parent,
-                             QObject::tr( "Clear Configurations" ),
-                             QObject::tr( "Are you sure you want to clear ALL authentication configurations?\n\n"
+                             QObject::tr( "Remove Configurations" ),
+                             QObject::tr( "Are you sure you want to remove ALL authentication configurations?\n\n"
                                           "Operation can NOT be undone!" ),
-                             QMessageBox::Ok | QMessageBox::Cancel ) == QMessageBox::Cancel )
+                             QMessageBox::Ok | QMessageBox::Cancel,
+                             QMessageBox::Cancel ) == QMessageBox::Cancel )
   {
     return;
   }
 
-  QString msg( QObject::tr( "Authentication configurations cleared" ) );
+  QString msg( QObject::tr( "Authentication configurations removed" ) );
   QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
 
-  if ( !QgsAuthManager::instance()->clearAllAuthenticationConfigs() )
+  if ( !QgsAuthManager::instance()->removeAllAuthenticationConfigs() )
   {
-    msg = QObject::tr( "Authentication configurations FAILED to be cleared" );
+    msg = QObject::tr( "Authentication configurations FAILED to be removed" );
     level = QgsMessageBar::WARNING;
   }
 
   msgbar->pushMessage( QgsAuthManager::instance()->authManTag(), msg, level, timeout );
 }
 
-void QgsAuthenticationUtils::clearAuthenticationDatabase( QgsMessageBar *msgbar, int timeout, QWidget *parent )
+void QgsAuthUtils::eraseAuthenticationDatabase( QgsMessageBar *msgbar, int timeout, QWidget *parent )
 {
   if ( QMessageBox::warning( parent,
                              QObject::tr( "Erase Database" ),
-                             QObject::tr( "Are you sure you want to erase the entire authentication database?\n\n"
+                             QObject::tr( "Are you sure you want to ERASE the entire authentication database?\n\n"
                                           "Operation can NOT be undone!" ),
-                             QMessageBox::Ok | QMessageBox::Cancel ) == QMessageBox::Cancel )
+                             QMessageBox::Ok | QMessageBox::Cancel,
+                             QMessageBox::Cancel ) == QMessageBox::Cancel )
   {
     return;
   }
@@ -187,7 +196,7 @@ void QgsAuthenticationUtils::clearAuthenticationDatabase( QgsMessageBar *msgbar,
   QString msg( QObject::tr( "Authentication database erased" ) );
   QgsMessageBar::MessageLevel level( QgsMessageBar::INFO );
 
-  if ( !QgsAuthManager::instance()->clearAuthenticationDatabase() )
+  if ( !QgsAuthManager::instance()->eraseAuthenticationDatabase() )
   {
     msg = QObject::tr( "Authentication database FAILED to be erased" );
     level = QgsMessageBar::WARNING;

@@ -65,9 +65,9 @@ class QgsAuthManager : QObject
 
     bool removeAuthenticationConfig( const QString& authid );
 
-    bool clearAllAuthenticationConfigs();
+    bool removeAllAuthenticationConfigs();
 
-    bool clearAuthenticationDatabase();
+    bool eraseAuthenticationDatabase();
 
     void updateNetworkRequest( QNetworkRequest &request /In,Out/, const QString& authid );
 
@@ -79,7 +79,9 @@ class QgsAuthManager : QObject
     void masterPasswordVerified( bool verified ) const;
 
   public slots:
-    void removeCachedConfig( const QString& authid );
+    void clearAllCachedConfigs();
+
+    void clearCachedConfig( const QString& authid );
 
   protected:
     explicit QgsAuthManager( QObject *parent = 0 );

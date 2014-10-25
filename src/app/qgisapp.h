@@ -633,11 +633,14 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     //! Open authentication configs editor (in Options)
     void editAuthenticationConfigs();
 
-    //! Clear out all authentication configs
-    void clearAuthenticationConfigs();
+    //! Clear all cached authentication configs for session
+    void clearCachedAuthenticationConfigs();
+
+    //! Remove all authentication configs
+    void removeAuthenticationConfigs();
 
     //! Completely clear out the authentication database (configs and master password)
-    void clearAuthenticationDatabase();
+    void eraseAuthenticationDatabase();
 
     //! Push authentication database functions output to messagebar
     void authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level );

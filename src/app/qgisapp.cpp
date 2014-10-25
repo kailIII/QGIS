@@ -1073,9 +1073,10 @@ void QgisApp::createActions()
   connect( mActionSetMasterPassword, SIGNAL( triggered() ), this, SLOT( setMasterPassword() ) );
   connect( mActionClearCachedMasterPassword, SIGNAL( triggered() ), this, SLOT( clearCachedMasterPassword() ) );
   connect( mActionResetMasterPassword, SIGNAL( triggered() ), this, SLOT( resetMasterPassword() ) );
-  connect( mActionEditAuthenticationConfigs, SIGNAL( triggered() ), this, SLOT( editAuthenticationConfigs() ) );
-  connect( mActionClearAuthenticationConfigs, SIGNAL( triggered() ), this, SLOT( clearAuthenticationConfigs() ) );
-  connect( mActionEraseAuthenticationDatabase, SIGNAL( triggered() ), this, SLOT( clearAuthenticationDatabase() ) );
+  connect( mActionEditAuthConfigs, SIGNAL( triggered() ), this, SLOT( editAuthenticationConfigs() ) );
+  connect( mActionClearCachedAuthConfigs, SIGNAL( triggered() ), this, SLOT( clearCachedAuthenticationConfigs() ) );
+  connect( mActionRemoveAuthConfigs, SIGNAL( triggered() ), this, SLOT( removeAuthenticationConfigs() ) );
+  connect( mActionEraseAuthDatabase, SIGNAL( triggered() ), this, SLOT( eraseAuthenticationDatabase() ) );
 
   // Edit Menu Items
 
@@ -10063,17 +10064,17 @@ void QgisApp::masterPasswordSetup()
 
 void QgisApp::setMasterPassword()
 {
-  QgsAuthenticationUtils::setMasterPassword( messageBar(), messageTimeout() );
+  QgsAuthUtils::setMasterPassword( messageBar(), messageTimeout() );
 }
 
 void QgisApp::clearCachedMasterPassword()
 {
-  QgsAuthenticationUtils::clearCachedMasterPassword( messageBar(), messageTimeout() );
+  QgsAuthUtils::clearCachedMasterPassword( messageBar(), messageTimeout() );
 }
 
 void QgisApp::resetMasterPassword()
 {
-  QgsAuthenticationUtils::resetMasterPassword( messageBar(), messageTimeout(), this );
+  QgsAuthUtils::resetMasterPassword( messageBar(), messageTimeout(), this );
 }
 
 void QgisApp::editAuthenticationConfigs()
@@ -10081,14 +10082,19 @@ void QgisApp::editAuthenticationConfigs()
   showOptionsDialog( this, QString( "mOptionsPageAuth" ) );
 }
 
-void QgisApp::clearAuthenticationConfigs()
+void QgisApp::clearCachedAuthenticationConfigs()
 {
-  QgsAuthenticationUtils::clearAuthenticationConfigs( messageBar(), messageTimeout(), this );
+  QgsAuthUtils::clearCachedAuthenticationConfigs( messageBar(), messageTimeout() );
 }
 
-void QgisApp::clearAuthenticationDatabase()
+void QgisApp::removeAuthenticationConfigs()
 {
-  QgsAuthenticationUtils::clearAuthenticationDatabase( messageBar(), messageTimeout(), this );
+  QgsAuthUtils::removeAuthenticationConfigs( messageBar(), messageTimeout(), this );
+}
+
+void QgisApp::eraseAuthenticationDatabase()
+{
+  QgsAuthUtils::eraseAuthenticationDatabase( messageBar(), messageTimeout(), this );
 }
 
 void QgisApp::authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level )

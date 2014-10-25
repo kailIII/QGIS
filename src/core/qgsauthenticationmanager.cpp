@@ -139,16 +139,16 @@ bool QgsAuthManager::setMasterPassword( bool verify )
 {
   if ( mMasterPass.isEmpty() )
   {
-    QgsDebugMsg( "Master password: not yet set by user" );
+    QgsDebugMsg( "Master password set: not yet set by user" );
     if ( !masterPasswordInput() )
     {
-      QgsDebugMsg( "Master password: input canceled by user" );
+      QgsDebugMsg( "Master password set: input canceled by user" );
       return false;
     }
   }
   else
   {
-    QgsDebugMsg( "Master password: is set" );
+    QgsDebugMsg( "Master password set: SUCCESS" );
     if ( !verify )
       return true;
   }
@@ -156,7 +156,7 @@ bool QgsAuthManager::setMasterPassword( bool verify )
   if ( !verifyMasterPassword() )
     return false;
 
-  QgsDebugMsg( "Master password: SUCCESS, verified and ready" );
+  QgsDebugMsg( "Master password set: SUCCESS and verified" );
   return true;
 }
 
@@ -168,13 +168,13 @@ bool QgsAuthManager::setMasterPassword( const QString& pass, bool verify )
   if ( verify && !verifyMasterPassword() )
   {
     mMasterPass = prevpass;
-    const char* err = QT_TR_NOOP( "Master password: FAILED to verify, reset to previous" );
+    const char* err = QT_TR_NOOP( "Master password set: FAILED to verify, reset to previous" );
     QgsDebugMsg( err );
     emit messageOut( tr( err ), authManTag(), WARNING );
     return false;
   }
 
-  QgsDebugMsg( QString( "Master password: SUCCESS, ready%1" ).arg( verify ? " and verified" : "" ) );
+  QgsDebugMsg( QString( "Master password set: SUCCESS%1" ).arg( verify ? " and verified" : "" ) );
   return true;
 }
 
@@ -278,11 +278,12 @@ bool QgsAuthManager::resetMasterPassword( const QString& newpassword, bool keepb
 
   if ( !QFile::copy( QgsApplication::qgisAuthDbFilePath(), dbbackup ) )
   {
-    const char* err = QT_TR_NOOP( "Master password reset: could not backup current database" );
+    const char* err = QT_TR_NOOP( "Master password reset FAILED: could not backup current database" );
     QgsDebugMsg( err );
     emit messageOut( tr( err ), authManTag(), WARNING );
     return false;
   }
+  QgsDebugMsg( "Master password reset: backed up current database" );
 
   // create new connection
   authDbConnection();
@@ -291,60 +292,103 @@ bool QgsAuthManager::resetMasterPassword( const QString& newpassword, bool keepb
   QString prevpass = QString( mMasterPass );
   QString prevciv = QString( masterPasswordCiv() );
 
-  // clear password hash table
-  if ( !masterPasswordClearDb() )
+  // on ANY FAILURE from this point, reinstate previous password and database
+  bool ok = true;
+
+  // clear password hash table (also clears mMasterPass)
+  if ( ok && !masterPasswordClearDb() )
   {
-    const char* err = QT_TR_NOOP( "Master password reset: could not clear current password from database" );
+    ok = false;
+    const char* err = QT_TR_NOOP( "Master password reset FAILED: could not clear current password from database" );
     QgsDebugMsg( err );
     emit messageOut( tr( err ), authManTag(), WARNING );
-    return false;
   }
+  if ( ok )
+    QgsDebugMsg( "Master password reset: cleared current password from database" );
+
+  // mMasterPass empty, set new password (don't verify, since not stored yet)
+  setMasterPassword( newpassword, false );
 
   // store new password hash
-  if ( !masterPasswordStoreInDb() )
+  if ( ok && !masterPasswordStoreInDb() )
   {
-    const char* err = QT_TR_NOOP( "Master password reset: could not store new password in database" );
+    ok = false;
+    const char* err = QT_TR_NOOP( "Master password reset FAILED: could not store new password in database" );
     QgsDebugMsg( err );
     emit messageOut( tr( err ), authManTag(), WARNING );
-    return false;
+  }
+  if ( ok )
+    QgsDebugMsg( "Master password reset: stored new password in database" );
+
+  // verify it stored password properly
+  if ( ok && !verifyMasterPassword() )
+  {
+    ok = false;
+    const char* err = QT_TR_NOOP( "Master password reset FAILED: could not verify new password in database" );
+    QgsDebugMsg( err );
+    emit messageOut( tr( err ), authManTag(), WARNING );
   }
 
-  // on failure, reinstate previous database and mMasterPass
-  if ( !reencryptAllAuthenticationConfigs( prevpass, prevciv ) )
+  // re-encrypt everything with new password
+  if ( ok && !reencryptAllAuthenticationConfigs( prevpass, prevciv ) )
   {
-    // backup broken attempt, for inspection
+    ok = false;
+    const char* err = QT_TR_NOOP( "Master password reset FAILED: could not re-encrypt configs in database" );
+    QgsDebugMsg( err );
+    emit messageOut( tr( err ), authManTag(), WARNING );
+  }
+  if ( ok )
+    QgsDebugMsg( "Master password reset: re-encrypted configs in database" );
+
+  // verify it all worked
+  if ( ok && !verifyPasswordCanDecryptConfigs() )
+  {
+    ok = false;
+    const char* err = QT_TR_NOOP( "Master password reset FAILED: could not verify password can decrypt re-encrypted configs" );
+    QgsDebugMsg( err );
+    emit messageOut( tr( err ), authManTag(), WARNING );
+  }
+
+  // something went wrong, reinstate previous password and database
+  if ( !ok )
+  {
+    // backup database of failed attempt, for inspection
     authDbConnection().close();
     QString errdbbackup( dbbackup );
     errdbbackup.replace( QString( ".db" ), QString( "_ERROR.db" ) );
     QFile::rename( QgsApplication::qgisAuthDbFilePath(), errdbbackup );
+    QgsDebugMsg( QString( "Master password reset FAILED: backed up failed db at %1" ).arg( errdbbackup ) );
 
     // reinstate previous database and password
     QFile::rename( dbbackup, QgsApplication::qgisAuthDbFilePath() );
     mMasterPass = prevpass;
     authDbConnection();
-
-    const char* err = QT_TR_NOOP( "Master password reset: could not reencrypt configs in database" );
-    QgsDebugMsg( err );
-    emit messageOut( tr( err ), authManTag(), WARNING );
+    QgsDebugMsg( "Master password reset FAILED: reinstated previous password and database" );
 
     // assign error db backup
     if ( backuppath )
       *backuppath = errdbbackup;
+
     return false;
   }
+
 
   if ( !keepbackup && !QFile::remove( dbbackup ) )
   {
     const char* err = QT_TR_NOOP( "Master password reset: could not remove old database backup" );
     QgsDebugMsg( err );
     emit messageOut( tr( err ), authManTag(), WARNING );
-    // a minor error, continue
+    // a non-blocking error, continue
+  }
+
+  if ( keepbackup )
+  {
+    QgsDebugMsg( QString( "Master password reset: backed up previous db at %1" ).arg( dbbackup ) );
+    if ( backuppath )
+      *backuppath = dbbackup;
   }
 
   QgsDebugMsg( "Master password reset: SUCCESS" );
-
-  if ( backuppath )
-    *backuppath = dbbackup;
   return true;
 }
 
@@ -607,7 +651,7 @@ bool QgsAuthManager::updateAuthenticationConfig( const QgsAuthConfigBase& config
     return false;
 
   // should come before updating provider types, in case user switched providers in config
-  removeCachedConfig( config.id() );
+  clearCachedConfig( config.id() );
 
   updateConfigProviderTypes();
 
@@ -688,7 +732,7 @@ bool QgsAuthManager::removeAuthenticationConfig( const QString& authid )
   if ( !authDbCommit() )
     return false;
 
-  removeCachedConfig( authid );
+  clearCachedConfig( authid );
 
   updateConfigProviderTypes();
 
@@ -697,16 +741,24 @@ bool QgsAuthManager::removeAuthenticationConfig( const QString& authid )
   return true;
 }
 
-bool QgsAuthManager::clearAllAuthenticationConfigs()
+bool QgsAuthManager::removeAllAuthenticationConfigs()
 {
   QSqlQuery query( authDbConnection() );
   query.prepare( QString( "DELETE FROM %1" ).arg( authDbConfigTable() ) );
-  return authDbTransactionQuery( &query );
+  bool res = authDbTransactionQuery( &query );
+
+  if ( res )
+  {
+    clearAllCachedConfigs();
+    updateConfigProviderTypes();
+  }
+
+  return res;
 }
 
-bool QgsAuthManager::clearAuthenticationDatabase()
+bool QgsAuthManager::eraseAuthenticationDatabase()
 {
-  return ( clearAllAuthenticationConfigs() && masterPasswordClearDb() );
+  return ( removeAllAuthenticationConfigs() && masterPasswordClearDb() );
 }
 
 void QgsAuthManager::updateNetworkRequest( QNetworkRequest &request, const QString& authid )
@@ -731,12 +783,20 @@ void QgsAuthManager::updateNetworkReply( QNetworkReply *reply, const QString& au
   }
 }
 
-void QgsAuthManager::removeCachedConfig( const QString& authid )
+void QgsAuthManager::clearAllCachedConfigs()
+{
+  foreach ( QString configid, configIds() )
+  {
+    clearCachedConfig( configid );
+  }
+}
+
+void QgsAuthManager::clearCachedConfig( const QString& authid )
 {
   QgsAuthProvider* provider = configProvider( authid );
   if ( provider )
   {
-    provider->removeCachedConfig( authid );
+    provider->clearCachedConfig( authid );
   }
 }
 
@@ -918,9 +978,43 @@ QStringList QgsAuthManager::configIds() const
   return configids;
 }
 
+bool QgsAuthManager::verifyPasswordCanDecryptConfigs() const
+{
+  // no need to check for setMasterPassword, since this is private and it will be set
+
+  QSqlQuery query( authDbConnection() );
+
+  query.prepare( QString( "SELECT id, config FROM %1" ).arg( authDbConfigTable() ) );
+
+  if ( !authDbQuery( &query ) )
+    return false;
+
+  if ( !query.isActive() || !query.isSelect() )
+  {
+    QgsDebugMsg( QString( "Verify password can decrypt configs FAILED, query not active or a select operation" ) );
+    return false;
+  }
+
+  int checked = 0;
+  while ( query.next() )
+  {
+    ++checked;
+    QString configstring( QgsAuthCrypto::decrypt( mMasterPass, masterPasswordCiv(), query.value( 1 ).toString() ) );
+    if ( configstring.isEmpty() )
+    {
+      QgsDebugMsg( QString( "Verify password can decrypt configs FAILED, could not decrypt a config (id: %1)" )
+                   .arg( query.value( 0 ).toString() ) );
+      return false;
+    }
+  }
+
+  QgsDebugMsg( QString( "Verify password can decrypt configs SUCCESS (checked %1 configs)" ).arg( checked ) );
+  return true;
+}
+
 bool QgsAuthManager::reencryptAllAuthenticationConfigs( const QString &prevpass, const QString &prevciv )
 {
-  bool res = false;
+  bool res = true;
   foreach ( QString configid, configIds() )
   {
     res = res && reencryptAuthenticationConfig( configid, prevpass, prevciv );
@@ -943,7 +1037,10 @@ bool QgsAuthManager::reencryptAuthenticationConfig( const QString &authid, const
     return false;
 
   if ( !query.isActive() || !query.isSelect() )
+  {
+    QgsDebugMsg( QString( "Reencrypt FAILED, query not active or a select operation for authid: %2" ).arg( authid ) );
     return false;
+  }
 
   if ( query.first() )
   {
@@ -969,6 +1066,11 @@ bool QgsAuthManager::reencryptAuthenticationConfig( const QString &authid, const
 
     QgsDebugMsg( QString( "Reencrypt SUCCESS for authid: %2" ).arg( authid ) );
     return true;
+  }
+  else
+  {
+    QgsDebugMsg( QString( "Reencrypt FAILED, could not find in db authid: %2" ).arg( authid ) );
+    return false;
   }
 
   if ( query.next() )

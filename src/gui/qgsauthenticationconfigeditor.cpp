@@ -124,8 +124,10 @@ void QgsAuthConfigEditor::on_btnRemoveConfig_clicked()
   QString name = indx.sibling( indx.row(), 1 ).data().toString();
 
   if ( QMessageBox::warning( this, tr( "Remove Configuration" ),
-                             tr( "Are you sure you want to remove '%1'? (no undo)" ).arg( name ),
-                             QMessageBox::Yes | QMessageBox::No ) == QMessageBox::Yes )
+                             tr( "Are you sure you want to remove '%1'?\n\n"
+                                 "Operation can NOT be undone!" ).arg( name ),
+                             QMessageBox::Ok | QMessageBox::Cancel,
+                             QMessageBox::Cancel ) == QMessageBox::Ok )
   {
     mConfigModel->removeRow( indx.row() );
   }

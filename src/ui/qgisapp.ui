@@ -217,10 +217,11 @@
      <addaction name="mActionClearCachedMasterPassword"/>
      <addaction name="mActionResetMasterPassword"/>
      <addaction name="separator"/>
-     <addaction name="mActionEditAuthenticationConfigs"/>
-     <addaction name="mActionClearAuthenticationConfigs"/>
+     <addaction name="mActionEditAuthConfigs"/>
+     <addaction name="mActionClearCachedAuthConfigs"/>
+     <addaction name="mActionRemoveAuthConfigs"/>
      <addaction name="separator"/>
-     <addaction name="mActionEraseAuthenticationDatabase"/>
+     <addaction name="mActionEraseAuthDatabase"/>
     </widget>
     <addaction name="mActionProjectProperties"/>
     <addaction name="mActionCustomProjection"/>
@@ -2270,7 +2271,7 @@ Acts on currently active editable layer</string>
     <string>Input master password</string>
    </property>
   </action>
-  <action name="mActionEraseAuthenticationDatabase">
+  <action name="mActionEraseAuthDatabase">
    <property name="text">
     <string>Erase authentication database</string>
    </property>
@@ -2280,14 +2281,19 @@ Acts on currently active editable layer</string>
     <string>Reset master password</string>
    </property>
   </action>
-  <action name="mActionClearAuthenticationConfigs">
+  <action name="mActionRemoveAuthConfigs">
    <property name="text">
-    <string>Clear authentication configurations</string>
+    <string>Remove all authentication configurations</string>
    </property>
   </action>
-  <action name="mActionEditAuthenticationConfigs">
+  <action name="mActionEditAuthConfigs">
    <property name="text">
     <string>Edit authentication configurations</string>
+   </property>
+  </action>
+  <action name="mActionClearCachedAuthConfigs">
+   <property name="text">
+    <string>Clear cached authentication configurations</string>
    </property>
   </action>
  </widget>

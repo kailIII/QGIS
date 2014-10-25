@@ -33,7 +33,7 @@ class GUI_EXPORT QgsMasterPasswordResetDialog : public QDialog, private Ui::QgsM
 
 ///////////////////////////////////////////////
 
-class GUI_EXPORT QgsAuthenticationUtils
+class GUI_EXPORT QgsAuthUtils
 {
   public:
 
@@ -46,11 +46,14 @@ class GUI_EXPORT QgsAuthenticationUtils
     //! Reset the cached master password, updating its hash in authentication database and reseting all existing configs to use it
     static void resetMasterPassword( QgsMessageBar *msgbar, int timeout = 0, QWidget *parent = 0 );
 
-    //! Clear out all authentication configs
-    static void clearAuthenticationConfigs(QgsMessageBar *msgbar, int timeout = 0, QWidget *parent = 0 );
+    //! Clear all cached authentication configs for session
+    static void clearCachedAuthenticationConfigs( QgsMessageBar *msgbar, int timeout = 0 );
+
+    //! Remove all authentication configs
+    static void removeAuthenticationConfigs( QgsMessageBar *msgbar, int timeout = 0, QWidget *parent = 0 );
 
     //! Completely clear out the authentication database (configs and master password)
-    static void clearAuthenticationDatabase( QgsMessageBar *msgbar, int timeout = 0, QWidget *parent = 0  );
+    static void eraseAuthenticationDatabase( QgsMessageBar *msgbar, int timeout = 0, QWidget *parent = 0 );
 
 };
 
