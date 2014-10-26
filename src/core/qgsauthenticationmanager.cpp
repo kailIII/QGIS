@@ -183,7 +183,7 @@ bool QgsAuthManager::verifyMasterPassword()
   int rows = 0;
   if ( !masterPasswordRowsInDb( &rows ) )
   {
-    const char* err = QT_TR_NOOP( "Master password: FAILED to access auth db" );
+    const char* err = QT_TR_NOOP( "Master password: FAILED to access database" );
     QgsDebugMsg( err );
     emit messageOut( tr( err ), authManTag(), CRITICAL );
 
@@ -191,11 +191,11 @@ bool QgsAuthManager::verifyMasterPassword()
     return false;
   }
 
-  QgsDebugMsg( QString( "Master password: %1 rows in auth db" ).arg( rows ) );
+  QgsDebugMsg( QString( "Master password: %1 rows in database" ).arg( rows ) );
 
   if ( rows > 1 )
   {
-    const char* err = QT_TR_NOOP( "Master password: FAILED to find just one master password record in auth db" );
+    const char* err = QT_TR_NOOP( "Master password: FAILED to find just one master password record in database" );
     QgsDebugMsg( err );
     emit messageOut( tr( err ), authManTag(), WARNING );
 
@@ -206,7 +206,7 @@ bool QgsAuthManager::verifyMasterPassword()
   {
     if ( !masterPasswordCheckAgainstDb() )
     {
-      const char* err = QT_TR_NOOP( "Master password: FAILED to verify against hash in auth db" );
+      const char* err = QT_TR_NOOP( "Master password: FAILED to verify against hash in database" );
       QgsDebugMsg( err );
       emit messageOut( tr( err ), authManTag(), WARNING );
 
@@ -216,7 +216,7 @@ bool QgsAuthManager::verifyMasterPassword()
     }
     else
     {
-      QgsDebugMsg( "Master password: verified against hash in auth db" );
+      QgsDebugMsg( "Master password: verified against hash in database" );
       emit masterPasswordVerified( true );
     }
   }
@@ -224,7 +224,7 @@ bool QgsAuthManager::verifyMasterPassword()
   {
     if ( !masterPasswordStoreInDb() )
     {
-      const char* err = QT_TR_NOOP( "Master password: hash FAILED to be stored in auth db" );
+      const char* err = QT_TR_NOOP( "Master password: hash FAILED to be stored in database" );
       QgsDebugMsg( err );
       emit messageOut( tr( err ), authManTag(), CRITICAL );
 
@@ -233,12 +233,12 @@ bool QgsAuthManager::verifyMasterPassword()
     }
     else
     {
-      QgsDebugMsg( "Master password: hash stored in auth db" );
+      QgsDebugMsg( "Master password: hash stored in database" );
     }
     // double-check storing
     if ( !masterPasswordCheckAgainstDb() )
     {
-      const char* err = QT_TR_NOOP( "Master password: FAILED to verify against hash in auth db" );
+      const char* err = QT_TR_NOOP( "Master password: FAILED to verify against hash in database" );
       QgsDebugMsg( err );
       emit messageOut( tr( err ), authManTag(), WARNING );
 
@@ -248,7 +248,7 @@ bool QgsAuthManager::verifyMasterPassword()
     }
     else
     {
-      QgsDebugMsg( "Master password: verified against hash in auth db" );
+      QgsDebugMsg( "Master password: verified against hash in database" );
       emit masterPasswordVerified( true );
     }
   }
@@ -882,7 +882,7 @@ bool QgsAuthManager::masterPasswordHashInDb() const
   int rows = 0;
   if ( !masterPasswordRowsInDb( &rows ) )
   {
-    const char* err = QT_TR_NOOP( "Master password: FAILED to access auth db" );
+    const char* err = QT_TR_NOOP( "Master password: FAILED to access database" );
     QgsDebugMsg( err );
     emit messageOut( tr( err ), authManTag(), CRITICAL );
 

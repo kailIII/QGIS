@@ -1,15 +1,25 @@
 #include "qgsauthenticationconfigeditor.h"
 #include "ui_qgsauthenticationconfigeditor.h"
 
+#include <QMenu>
 #include <QMessageBox>
+#include <QSettings>
 #include <QSqlTableModel>
 
 #include "qgsauthenticationmanager.h"
 #include "qgsauthenticationconfigwidget.h"
+#include "qgsauthenticationutils.h"
 
 QgsAuthConfigEditor::QgsAuthConfigEditor( QWidget *parent )
     : QWidget( parent )
     , mConfigModel( 0 )
+    , mAuthUtilitiesMenu( 0 )
+    , mActionSetMasterPassword( 0 )
+    , mActionClearCachedMasterPassword( 0 )
+    , mActionResetMasterPassword( 0 )
+    , mActionClearCachedAuthConfigs( 0 )
+    , mActionRemoveAuthConfigs( 0 )
+    , mActionEraseAuthDatabase( 0 )
 {
   setupUi( this );
 
@@ -47,20 +57,73 @@ QgsAuthConfigEditor::QgsAuthConfigEditor( QWidget *parent )
            this, SLOT( authMessageOut( const QString&, const QString&, QgsAuthManager::MessageLevel ) ) );
 
   checkSelection();
+
+  // set up utility actions menu
+  mActionSetMasterPassword = new QAction( "Input master password", this );
+  mActionClearCachedMasterPassword = new QAction( "Clear cached master password", this );
+  mActionResetMasterPassword = new QAction( "Reset master password", this );
+  mActionClearCachedAuthConfigs = new QAction( "Clear cached authentication configurations", this );
+  mActionRemoveAuthConfigs = new QAction( "Remove all authentication configurations", this );
+  mActionEraseAuthDatabase = new QAction( "Erase authentication database", this );
+
+  connect( mActionSetMasterPassword, SIGNAL( triggered() ), this, SLOT( setMasterPassword() ) );
+  connect( mActionClearCachedMasterPassword, SIGNAL( triggered() ), this, SLOT( clearCachedMasterPassword() ) );
+  connect( mActionResetMasterPassword, SIGNAL( triggered() ), this, SLOT( resetMasterPassword() ) );
+  connect( mActionClearCachedAuthConfigs, SIGNAL( triggered() ), this, SLOT( clearCachedAuthenticationConfigs() ) );
+  connect( mActionRemoveAuthConfigs, SIGNAL( triggered() ), this, SLOT( removeAuthenticationConfigs() ) );
+  connect( mActionEraseAuthDatabase, SIGNAL( triggered() ), this, SLOT( eraseAuthenticationDatabase() ) );
+
+  mAuthUtilitiesMenu = new QMenu( this );
+  mAuthUtilitiesMenu->addAction( mActionSetMasterPassword );
+  mAuthUtilitiesMenu->addAction( mActionClearCachedMasterPassword );
+  mAuthUtilitiesMenu->addAction( mActionResetMasterPassword );
+  mAuthUtilitiesMenu->addSeparator();
+  mAuthUtilitiesMenu->addAction( mActionClearCachedAuthConfigs );
+  mAuthUtilitiesMenu->addAction( mActionRemoveAuthConfigs );
+  mAuthUtilitiesMenu->addSeparator();
+  mAuthUtilitiesMenu->addAction( mActionEraseAuthDatabase );
+
+  btnAuthUtilities->setMenu( mAuthUtilitiesMenu );
 }
 
 QgsAuthConfigEditor::~QgsAuthConfigEditor()
 {
 }
 
+void QgsAuthConfigEditor::setMasterPassword()
+{
+  QgsAuthUtils::setMasterPassword( messageBar(), messageTimeout() );
+}
+
+void QgsAuthConfigEditor::clearCachedMasterPassword()
+{
+  QgsAuthUtils::clearCachedMasterPassword( messageBar(), messageTimeout() );
+}
+
+void QgsAuthConfigEditor::resetMasterPassword()
+{
+  QgsAuthUtils::resetMasterPassword( messageBar(), messageTimeout(), this );
+}
+
+void QgsAuthConfigEditor::clearCachedAuthenticationConfigs()
+{
+  QgsAuthUtils::clearCachedAuthenticationConfigs( messageBar(), messageTimeout() );
+}
+
+void QgsAuthConfigEditor::removeAuthenticationConfigs()
+{
+  QgsAuthUtils::removeAuthenticationConfigs( messageBar(), messageTimeout(), this );
+}
+
+void QgsAuthConfigEditor::eraseAuthenticationDatabase()
+{
+  QgsAuthUtils::eraseAuthenticationDatabase( messageBar(), messageTimeout(), this );
+}
+
 void QgsAuthConfigEditor::authMessageOut( const QString& message, const QString& authtag, QgsAuthManager::MessageLevel level )
 {
-  // only if this dialog is the active window
-  if ( qApp->activeWindow() != this )
-    return;
-
   int levelint = ( int )level;
-  msgBar->pushMessage( authtag, message, ( QgsMessageBar::MessageLevel )levelint, 7 );
+  messageBar()->pushMessage( authtag, message, ( QgsMessageBar::MessageLevel )levelint, 7 );
 }
 
 void QgsAuthConfigEditor::toggleTitleVisibility( bool visible )
@@ -131,6 +194,17 @@ void QgsAuthConfigEditor::on_btnRemoveConfig_clicked()
   {
     mConfigModel->removeRow( indx.row() );
   }
+}
+
+QgsMessageBar * QgsAuthConfigEditor::messageBar()
+{
+  return mMsgBar;
+}
+
+int QgsAuthConfigEditor::messageTimeout()
+{
+  QSettings settings;
+  return settings.value( "/qgis/messageTimeout", 5 ).toInt();
 }
 
 QString QgsAuthConfigEditor::selectedConfigId()

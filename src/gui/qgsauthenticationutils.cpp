@@ -50,7 +50,10 @@ bool QgsMasterPasswordResetDialog::requestMasterPasswordReset( QString *password
 
 void QgsMasterPasswordResetDialog::on_leMasterPassCurrent_textChanged( const QString& pass )
 {
+  // since this is called on every keystroke, block signals emitted during verification of password
+  QgsAuthManager::instance()->blockSignals( true );
   mPassCurOk = !pass.isEmpty() && QgsAuthManager::instance()->setMasterPassword( pass, true );
+  QgsAuthManager::instance()->blockSignals( false );
   validatePasswords();
 }
 
