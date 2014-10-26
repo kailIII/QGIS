@@ -139,16 +139,16 @@ bool QgsAuthManager::setMasterPassword( bool verify )
 {
   if ( mMasterPass.isEmpty() )
   {
-    QgsDebugMsg( "Master password set: not yet set by user" );
+    QgsDebugMsg( "Master password is not yet set by user" );
     if ( !masterPasswordInput() )
     {
-      QgsDebugMsg( "Master password set: input canceled by user" );
+      QgsDebugMsg( "Master password input canceled by user" );
       return false;
     }
   }
   else
   {
-    QgsDebugMsg( "Master password set: SUCCESS" );
+    QgsDebugMsg( "Master password is set" );
     if ( !verify )
       return true;
   }
@@ -156,7 +156,7 @@ bool QgsAuthManager::setMasterPassword( bool verify )
   if ( !verifyMasterPassword() )
     return false;
 
-  QgsDebugMsg( "Master password set: SUCCESS and verified" );
+  QgsDebugMsg( "Master password is set and verified" );
   return true;
 }
 
@@ -852,7 +852,7 @@ bool QgsAuthManager::masterPasswordInput()
   QString pass;
   QgsCredentials * creds = QgsCredentials::instance();
   creds->lock();
-  bool ok = creds->getMasterPassword( pass );
+  bool ok = creds->getMasterPassword( pass, masterPasswordHashInDb() );
   creds->unlock();
 
   if ( ok && !pass.isEmpty() && !masterPasswordSame( pass ) )

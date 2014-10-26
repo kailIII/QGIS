@@ -29,8 +29,8 @@ QgsCredentialDialog::QgsCredentialDialog( QWidget *parent, Qt::WindowFlags fl )
   connect( this, SIGNAL( credentialsRequested( QString, QString *, QString *, QString, bool * ) ),
            this, SLOT( requestCredentials( QString, QString *, QString *, QString, bool * ) ),
            Qt::BlockingQueuedConnection );
-  connect( this, SIGNAL( credentialsRequestedMasterPassword( QString *, bool * ) ),
-           this, SLOT( requestCredentialsMasterPassword( QString *, bool * ) ),
+  connect( this, SIGNAL( credentialsRequestedMasterPassword( QString *, bool, bool * ) ),
+           this, SLOT( requestCredentialsMasterPassword( QString *, bool, bool * ) ),
            Qt::BlockingQueuedConnection );
 }
 
@@ -83,28 +83,30 @@ void QgsCredentialDialog::requestCredentials( QString realm, QString *username, 
   }
 }
 
-bool QgsCredentialDialog::requestMasterPassword( QString &password )
+bool QgsCredentialDialog::requestMasterPassword( QString &password , bool stored )
 {
   bool ok;
   if ( qApp->thread() != QThread::currentThread() )
   {
     QgsDebugMsg( "emitting signal" );
-    emit credentialsRequestedMasterPassword( &password, &ok );
+    emit credentialsRequestedMasterPassword( &password, stored, &ok );
   }
   else
   {
-    requestCredentialsMasterPassword( &password, &ok );
+    requestCredentialsMasterPassword( &password, stored, &ok );
   }
   return ok;
 }
 
-void QgsCredentialDialog::requestCredentialsMasterPassword( QString * password, bool * ok )
+void QgsCredentialDialog::requestCredentialsMasterPassword( QString * password, bool stored , bool *ok )
 {
   QgsDebugMsg( "Entering." );
   stackedWidget->setCurrentIndex( 1 );
 
-  // TODO: Always verify master password first, then only activate widgets for password reset on VERIFIED current password
-  // "This will cause your authentication database to be duplicated and completely rebuilt using new password."
+  QString titletxt( stored ? tr( "Enter CURRENT master authentication password" ) : tr( "Set NEW master authentication password" ) );
+  lblPasswordTitle->setText( titletxt );
+
+  lblDontForget->setVisible( !stored );
 
   QApplication::setOverrideCursor( Qt::ArrowCursor );
 
@@ -128,8 +130,9 @@ void QgsCredentialDialog::requestCredentialsMasterPassword( QString * password, 
     }
   }
 
-  // don't leave master password in singleton's text field
+  // don't leave master password in singleton's text field, or the ability to show it
   leMasterPass->clear();
+  chkMasterPassShow->setChecked( false );
 
   QApplication::restoreOverrideCursor();
 }

@@ -43,7 +43,7 @@ class CORE_EXPORT QgsCredentials
     bool get( QString realm, QString &username, QString &password, QString message = QString::null );
     void put( QString realm, QString username, QString password );
 
-    bool getMasterPassword( QString &password );
+    bool getMasterPassword( QString &password, bool stored = false );
 
     //! retrieves instance
     static QgsCredentials *instance();
@@ -75,7 +75,7 @@ class CORE_EXPORT QgsCredentials
     virtual bool request( QString realm, QString &username, QString &password, QString message = QString::null ) = 0;
 
     //! request a master password
-    virtual bool requestMasterPassword( QString &password ) = 0;
+    virtual bool requestMasterPassword( QString &password, bool stored = false ) = 0;
 
     //! register instance
     void setInstance( QgsCredentials *theInstance );
@@ -113,7 +113,7 @@ class CORE_EXPORT QgsCredentialsConsole : public QObject, public QgsCredentials
 
   protected:
     virtual bool request( QString realm, QString &username, QString &password, QString message = QString::null );
-    virtual bool requestMasterPassword( QString &password );
+    virtual bool requestMasterPassword( QString &password, bool stored = false );
 };
 
 #endif
