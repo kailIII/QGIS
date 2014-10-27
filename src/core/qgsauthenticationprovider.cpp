@@ -274,13 +274,16 @@ void QgsAuthProviderPkiPaths::clearCachedConfig( const QString& authid )
   }
 }
 
-static QByteArray fileData_( const QString& path )
+static QByteArray fileData_( const QString& path, bool astext = false )
 {
   QByteArray data;
   QFile file( path );
   if ( file.exists() )
   {
-    bool ret = file.open( QIODevice::ReadOnly | QIODevice::Text );
+    QFile::OpenMode openflags( QIODevice::ReadOnly );
+    if ( astext )
+      openflags |= QIODevice::Text;
+    bool ret = file.open( openflags );
     if ( ret )
     {
       data = file.readAll();
@@ -290,15 +293,16 @@ static QByteArray fileData_( const QString& path )
   return data;
 }
 
-QSsl::KeyAlgorithm keyAlgorithm_( const QByteArray& keydata )
+QSsl::KeyAlgorithm pemKeyAlgorithm_( const QByteArray& keydata )
 {
   QString keytxt( keydata );
-  return (( keytxt.contains( "BEGIN DSA P" ) ) ? QSsl::Dsa : QSsl::Rsa );
+  return ( keytxt.contains( "BEGIN DSA P" ) ? QSsl::Dsa : QSsl::Rsa );
 }
 
 QgsPkiPathsBundle *QgsAuthProviderPkiPaths::getPkiPathsBundle( const QString& authid )
 {
   QgsPkiPathsBundle * bundle = 0;
+  bool pem = false; // whether component is from a PEM file
 
   // check if it is cached
   if ( mPkiPathsBundleCache.contains( authid ) )
@@ -322,7 +326,8 @@ QgsPkiPathsBundle *QgsAuthProviderPkiPaths::getPkiPathsBundle( const QString& au
 
   // init client cert
   // Note: if this is not valid, no sense continuing
-  QSslCertificate clientcert = QSslCertificate( fileData_( config.certId() ) );
+  pem = config.certId().endsWith( ".pem", Qt::CaseInsensitive );
+  QSslCertificate clientcert = QSslCertificate( fileData_( config.certId(), pem ), ( pem ? QSsl::Pem : QSsl::Der ) );
   if ( !clientcert.isValid() )
   {
     QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, client cert is not valid" ).arg( authid ) );
@@ -331,40 +336,71 @@ QgsPkiPathsBundle *QgsAuthProviderPkiPaths::getPkiPathsBundle( const QString& au
 
   // init key
   QSslKey clientkey;
-  QByteArray keydata = fileData_( config.keyId() );
+  pem = config.keyId().endsWith( ".pem", Qt::CaseInsensitive );
+  QByteArray keydata = fileData_( config.keyId(), pem );
 
   if ( keydata.isNull() )
   {
-    QgsDebugMsg( QString( "PKI bundle  for authid %1: insert FAILED, no key data read" ).arg( authid ) );
+    QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, no key data read" ).arg( authid ) );
     return bundle;
   }
 
   if ( !config.keyPassphrase().isNull() )
   {
-    clientkey = QSslKey( keydata, keyAlgorithm_( keydata ),
-                         QSsl::Pem, QSsl::PrivateKey, config.keyPassphrase().toLocal8Bit() );
+    clientkey = QSslKey( keydata,
+                         ( pem ? pemKeyAlgorithm_( keydata ) : QSsl::Rsa ),
+                         ( pem ? QSsl::Pem : QSsl::Der ),
+                         QSsl::PrivateKey,
+                         config.keyPassphrase().toUtf8() );
   }
   else
   {
-    clientkey = QSslKey( keydata, keyAlgorithm_( keydata ) );
+    clientkey = QSslKey( keydata,
+                         ( pem ? pemKeyAlgorithm_( keydata ) : QSsl::Rsa ),
+                         ( pem ? QSsl::Pem : QSsl::Der ) );
   }
 
   if ( clientkey.isNull() )
   {
-    QgsDebugMsg( QString( "PKI bundle  for authid %1: insert FAILED, cert key could not be created" ).arg( authid ) );
-    return bundle;
+    if ( pem )
+    {
+      QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, PEM cert key could not be created" ).arg( authid ) );
+      return bundle;
+    }
+    else
+    {
+      // retry DER (binary) with QSsl::Dsa, since its algorithm can not easily be guessed by Qt
+      if ( !config.keyPassphrase().isNull() )
+      {
+        clientkey = QSslKey( keydata, QSsl::Dsa, QSsl::Der, QSsl::PrivateKey, config.keyPassphrase().toUtf8() );
+      }
+      else
+      {
+        clientkey = QSslKey( keydata, QSsl::Dsa, QSsl::Der );
+      }
+
+      if ( clientkey.isNull() )
+      {
+        QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, Der/Dsa cert key could not be created" ).arg( authid ) );
+        return bundle;
+      }
+    }
   }
 
   // init issuer cert
   QSslCertificate issuercert;
-  QByteArray issuerdata = fileData_( config.issuerId() );
-  if ( !issuerdata.isNull() )
+  if ( !config.issuerId().isEmpty() )
   {
-    issuercert = QSslCertificate( issuerdata );
-    if ( !issuercert.isValid() )
+    pem = config.issuerId().endsWith( ".pem", Qt::CaseInsensitive );
+    QByteArray issuerdata = fileData_( config.issuerId(), pem );
+    if ( !issuerdata.isNull() )
     {
-      QgsDebugMsg( QString( "PKI bundle  for authid %1: insert FAILED, issuer cert is not valid" ).arg( authid ) );
-      return bundle;
+      issuercert = QSslCertificate( issuerdata, ( pem ? QSsl::Pem : QSsl::Der ) );
+      if ( !issuercert.isValid() )
+      {
+        QgsDebugMsg( QString( "PKI bundle  for authid %1: insert FAILED, issuer cert is not valid" ).arg( authid ) );
+        return bundle;
+      }
     }
   }
 
