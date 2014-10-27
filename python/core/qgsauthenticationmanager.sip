@@ -8,7 +8,6 @@ class QgsAuthManager : QObject
 
   public:
 
-    // TODO: switch to QgsMessageLog enum
     enum MessageLevel
     {
       INFO = 0,
@@ -26,13 +25,21 @@ class QgsAuthManager : QObject
 
     bool setMasterPassword( bool verify = false );
 
+    bool setMasterPassword( const QString& pass, bool verify = false );
+
+    bool verifyMasterPassword();
+
     bool masterPasswordIsSet() const;
+
+    bool masterPasswordHashInDb() const;
 
     void clearMasterPassword();
 
     bool masterPasswordSame( const QString& pass ) const;
 
-    bool resetMasterPassword();
+    bool resetMasterPassword(const QString& newpassword, bool keepbackup, QString *backuppath = 0 );
+
+    const QString authManTag() const;
 
 
     void registerProviders();
@@ -58,18 +65,23 @@ class QgsAuthManager : QObject
 
     bool removeAuthenticationConfig( const QString& authid );
 
+    bool removeAllAuthenticationConfigs();
+
+    bool eraseAuthenticationDatabase();
 
     void updateNetworkRequest( QNetworkRequest &request /In,Out/, const QString& authid );
 
     void updateNetworkReply( QNetworkReply *reply, const QString& authid );
 
   signals:
-    void messageOut( const QString& message, const QString& tag = smAuthManTag, MessageLevel level = INFO ) const;
+    void messageOut( const QString& message, const QString& tag = smAuthManTag, QgsAuthManager::MessageLevel level = INFO ) const;
 
     void masterPasswordVerified( bool verified ) const;
 
   public slots:
-    void removeCachedConfig( const QString& authid );
+    void clearAllCachedConfigs();
+
+    void clearCachedConfig( const QString& authid );
 
   protected:
     explicit QgsAuthManager( QObject *parent = 0 );

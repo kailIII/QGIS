@@ -145,7 +145,6 @@ bool QgsAuthConfigBasic::isValid( bool validateid ) const
   return (
            QgsAuthConfigBase::isValid( validateid )
            && mVersion != 0
-           && !mRealm.isEmpty()
            && !mUsername.isEmpty()
          );
 }

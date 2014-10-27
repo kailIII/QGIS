@@ -52,7 +52,6 @@ QgsNewHttpConnection::QgsNewHttpConnection(
 
   mAuthConfigSelect = new QgsAuthConfigSelect( this );
   tabAuth->insertTab( 1, mAuthConfigSelect, tr( "Configurations" ) );
-  mAuthConfigSelect->layout()->setContentsMargins( 11, 11, 11, 11 );
 
   if ( !connName.isEmpty() )
   {
