@@ -169,8 +169,8 @@ void QgsRendererRangeV2::toSld( QDomDocument &doc, QDomElement &element, QgsStri
 
 ///////////
 
-int QgsRendererRangeV2LabelFormat::MaxPrecision=15;
-int QgsRendererRangeV2LabelFormat::MinPrecision=-6;
+int QgsRendererRangeV2LabelFormat::MaxPrecision = 15;
+int QgsRendererRangeV2LabelFormat::MinPrecision = -6;
 
 QgsRendererRangeV2LabelFormat::QgsRendererRangeV2LabelFormat():
     mFormat( " %1 - %2 " ),
@@ -178,12 +178,14 @@ QgsRendererRangeV2LabelFormat::QgsRendererRangeV2LabelFormat():
     mTrimTrailingZeroes( false ),
     mNumberScale( 1.0 ),
     mNumberSuffix( "" ),
-    mReTrailingZeroes( "[.,]?0*$" )
+    mReTrailingZeroes( "[.,]?0*$" ),
+    mReNegativeZero( "^\\-0(?:[.,]0*)?$" )
 {
 }
 
 QgsRendererRangeV2LabelFormat::QgsRendererRangeV2LabelFormat( QString format, int precision, bool trimTrailingZeroes ):
-    mReTrailingZeroes( "[.,]?0*$" )
+    mReTrailingZeroes( "[.,]?0*$" ),
+    mReNegativeZero( "^\\-0(?:[.,]0*)?$" )
 {
   setFormat( format );
   setPrecision( precision );
@@ -210,13 +212,13 @@ void QgsRendererRangeV2LabelFormat::setPrecision( int precision )
   if ( precision < MinPrecision ) precision = MinPrecision;
   if ( precision > MaxPrecision ) precision = MaxPrecision;
   mPrecision = precision;
-  mNumberScale=1.0;
-  mNumberSuffix="";
-  while( precision < 0 )
+  mNumberScale = 1.0;
+  mNumberSuffix = "";
+  while ( precision < 0 )
   {
     precision++;
     mNumberScale /= 10.0;
-    mNumberSuffix.append('0');
+    mNumberSuffix.append( '0' );
   }
 }
 
@@ -227,27 +229,29 @@ QString QgsRendererRangeV2LabelFormat::labelForRange( const QgsRendererRangeV2 &
 
 QString QgsRendererRangeV2LabelFormat::formatNumber( double value ) const
 {
-  if( mPrecision > 0 )
+  if ( mPrecision > 0 )
   {
-    QString valueStr=QString::number( value, 'f', mPrecision );
-    if( mTrimTrailingZeroes ) valueStr=valueStr.replace(mReTrailingZeroes,"");
+    QString valueStr = QString::number( value, 'f', mPrecision );
+    if ( mTrimTrailingZeroes ) valueStr = valueStr.replace( mReTrailingZeroes, "" );
+    if ( mReNegativeZero.exactMatch( valueStr ) ) valueStr = valueStr.mid( 1 );
     return valueStr;
   }
   else
   {
-    QString valueStr=QString::number( value*mNumberScale, 'f', 0 );
-    if( valueStr != "0" ) valueStr=valueStr+mNumberSuffix;
+    QString valueStr = QString::number( value * mNumberScale, 'f', 0 );
+    if ( valueStr == "-0" ) valueStr = "0";
+    if ( valueStr != "0" ) valueStr = valueStr + mNumberSuffix;
     return valueStr;
   }
 }
 
 QString QgsRendererRangeV2LabelFormat::labelForRange( double lower, double upper ) const
 {
-  QString lowerStr=formatNumber(lower);
-  QString upperStr=formatNumber(upper);
+  QString lowerStr = formatNumber( lower );
+  QString upperStr = formatNumber( upper );
 
-  QString legend(mFormat);
-  return legend.replace( "%1",lowerStr).replace("%2",upperStr );
+  QString legend( mFormat );
+  return legend.replace( "%1", lowerStr ).replace( "%2", upperStr );
 }
 
 void QgsRendererRangeV2LabelFormat::setFromDomElement( QDomElement &element )
@@ -257,7 +261,7 @@ void QgsRendererRangeV2LabelFormat::setFromDomElement( QDomElement &element )
                                element.attribute( "separator", " - " ) + "%2" +
                                element.attribute( "suffix", " " )
                              );
-  setPrecision( element.attribute( "decimalplaces", "4" ).toInt());
+  setPrecision( element.attribute( "decimalplaces", "4" ).toInt() );
   mTrimTrailingZeroes = element.attribute( "trimtrailingzeroes", "false" ) == "true";
 }
 
@@ -935,7 +939,7 @@ QgsGraduatedSymbolRendererV2* QgsGraduatedSymbolRendererV2::createRenderer(
   r->setSourceColorRamp( ramp->clone() );
   r->setInvertedColorRamp( inverted );
   r->setMode( mode );
-  r->setLabelFormat( labelFormat, false );
+  r->setLabelFormat( labelFormat );
   r->updateClasses( vlayer, mode, classes );
   return r;
 }
@@ -961,7 +965,11 @@ QList<double> QgsGraduatedSymbolRendererV2::getDataValues( QgsVectorLayer *vlaye
   else
     lst = expression->referencedColumns();
 
-  QgsFeatureIterator fit = vlayer->getFeatures( QgsFeatureRequest().setFlags( QgsFeatureRequest::NoGeometry ).setSubsetOfAttributes( lst, vlayer->pendingFields() ) );
+  QgsFeatureIterator fit = vlayer->getFeatures( QgsFeatureRequest()
+                                                .setFlags( expression->needsGeometry() ?
+                                                             QgsFeatureRequest::NoFlags :
+                                                             QgsFeatureRequest::NoGeometry  )
+                                                .setSubsetOfAttributes( lst, vlayer->pendingFields() ) );
 
   // create list of non-null attribute values
   while ( fit.nextFeature( f ) )
@@ -1109,10 +1117,11 @@ QgsFeatureRendererV2* QgsGraduatedSymbolRendererV2::create( QDomElement& element
       double upperValue = rangeElem.attribute( "upper" ).toDouble();
       QString symbolName = rangeElem.attribute( "symbol" );
       QString label = rangeElem.attribute( "label" );
+      bool render = rangeElem.attribute( "render", "true" ) != "false";
       if ( symbolMap.contains( symbolName ) )
       {
         QgsSymbolV2* symbol = symbolMap.take( symbolName );
-        ranges.append( QgsRendererRangeV2( lowerValue, upperValue, symbol, label ) );
+        ranges.append( QgsRendererRangeV2( lowerValue, upperValue, symbol, label, render ) );
       }
     }
     rangeElem = rangeElem.nextSiblingElement();

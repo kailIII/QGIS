@@ -22,8 +22,10 @@
 #include "qgsvectorlayer.h"
 
 
-QgsMapToolAddRing::QgsMapToolAddRing( QgsMapCanvas* canvas ): QgsMapToolCapture( canvas, QgsMapToolCapture::CapturePolygon )
+QgsMapToolAddRing::QgsMapToolAddRing( QgsMapCanvas* canvas )
+    : QgsMapToolCapture( canvas, QgsMapToolCapture::CapturePolygon )
 {
+  mToolName = tr( "Add ring" );
 }
 
 QgsMapToolAddRing::~QgsMapToolAddRing()
@@ -70,6 +72,9 @@ void QgsMapToolAddRing::canvasReleaseEvent( QMouseEvent * e )
   }
   else if ( e->button() == Qt::RightButton )
   {
+    if ( !isCapturing() )
+      return;
+
     deleteTempRubberBand();
 
     closePolygon();

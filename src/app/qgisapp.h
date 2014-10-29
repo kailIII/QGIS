@@ -117,7 +117,7 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     //! Constructor
     QgisApp( QSplashScreen *splash, bool restorePlugins = true, QWidget * parent = 0, Qt::WindowFlags fl = Qt::Window );
     //! Constructor for unit tests
-    QgisApp( );
+    QgisApp();
     //! Destructor
     ~QgisApp();
     /**
@@ -364,6 +364,8 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     QAction *actionRemoveAllFromOverview() { return mActionRemoveAllFromOverview; }
     QAction *actionHideAllLayers() { return mActionHideAllLayers; }
     QAction *actionShowAllLayers() { return mActionShowAllLayers; }
+    QAction *actionHideSelectedLayers() { return mActionHideSelectedLayers; }
+    QAction *actionShowSelectedLayers() { return mActionShowSelectedLayers; }
 
     QAction *actionManagePlugins() { return mActionManagePlugins; }
     QAction *actionPluginListSeparator() { return mActionPluginSeparator1; }
@@ -479,6 +481,8 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     void layerTreeViewDoubleClicked( const QModelIndex& index );
     //! Make sure the insertion point for new layers is up-to-date with the current item in layer tree view
     void updateNewLayerInsertionPoint();
+    //! connected to layer tree registry bridge, selects first of the newly added map layers
+    void autoSelectAddedLayer( QList<QgsMapLayer*> layers );
     void activeLayerChanged( QgsMapLayer* layer );
     //! Zoom to full extent
     void zoomFull();
@@ -952,12 +956,10 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     void hideAllLayers();
     //reimplements method from base (gui) class
     void showAllLayers();
-    // TODO: remove exportMapServer declaration once the mapserver export plugin is complete
-    // and tested
-    /*
-    //! Export current view as a mapserver map file
-    void exportMapServer();
-    */
+    //reimplements method from base (gui) class
+    void hideSelectedLayers();
+    //reimplements method from base (gui) class
+    void showSelectedLayers();
     //! Return pointer to the active layer
     QgsMapLayer *activeLayer();
     //! set the active layer
@@ -1066,7 +1068,7 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     void layerSubsetString();
 
     //! map tool changed
-    void mapToolChanged( QgsMapTool *newTool , QgsMapTool* oldTool );
+    void mapToolChanged( QgsMapTool *newTool, QgsMapTool* oldTool );
 
     /** Called when some layer's editing mode was toggled on/off
      * @note added in 1.9 */
@@ -1223,7 +1225,7 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     void changeLabelProperties();
 
     void renderDecorationItems( QPainter *p );
-    void projectReadDecorationItems( );
+    void projectReadDecorationItems();
 
     //! clear out any stuff from project
     void closeProject();

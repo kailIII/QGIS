@@ -1622,7 +1622,7 @@ void QgsWmsCapabilities::parseWMTSContents( QDomElement const &e )
         QgsDebugMsg( QString( "SKIPPING ResourceURL format=%1 resourceType=%2 template=%3" )
                      .arg( format )
                      .arg( resourceType )
-                     .arg( tmpl ) ) ;
+                     .arg( tmpl ) );
         continue;
       }
 
@@ -1666,7 +1666,7 @@ void QgsWmsCapabilities::parseWMTSContents( QDomElement const &e )
         QgsDebugMsg( QString( "UNEXPECTED resourceType in ResourcURL format=%1 resourceType=%2 template=%3" )
                      .arg( format )
                      .arg( resourceType )
-                     .arg( tmpl ) ) ;
+                     .arg( tmpl ) );
       }
     }
 

@@ -30,6 +30,7 @@
 
 static QColor _interpolate( QColor c1, QColor c2, double value )
 {
+  if ( qIsNaN( value ) ) value = 1;
   int r = ( int )( c1.red() + value * ( c2.red() - c1.red() ) );
   int g = ( int )( c1.green() + value * ( c2.green() - c1.green() ) );
   int b = ( int )( c1.blue() + value * ( c2.blue() - c1.blue() ) );
@@ -242,7 +243,7 @@ void QgsVectorGradientColorRampV2::addStopsToGradient( QGradient* gradient, doub
     {
       rampColor.setAlpha( rampColor.alpha() * alpha );
     }
-    gradient->setColorAt( it->offset , rampColor );
+    gradient->setColorAt( it->offset, rampColor );
   }
 }
 
@@ -365,11 +366,11 @@ double QgsRandomColorsV2::value( int index ) const
 
 QColor QgsRandomColorsV2::color( double value ) const
 {
-  Q_UNUSED( value );
   int minVal = 130;
   int maxVal = 255;
 
-  int colorIndex = value * ( mTotalColorCount - 1 );
+  //if value is nan, then use last precalculated color
+  int colorIndex = ( !qIsNaN( value ) ? value : 1 ) * ( mTotalColorCount - 1 );
   if ( mTotalColorCount >= 1 && mPrecalculatedColors.length() > colorIndex )
   {
     //use precalculated hue
@@ -607,7 +608,7 @@ QString QgsCptCityColorRampV2::descFileName() const
                                           QgsCptCityArchive::defaultBaseDir() );
 }
 
-QgsStringMap QgsCptCityColorRampV2::copyingInfo( ) const
+QgsStringMap QgsCptCityColorRampV2::copyingInfo() const
 {
   return QgsCptCityArchive::copyingInfo( copyingFileName() );
 }

@@ -23,6 +23,8 @@ class QWebPage;
 class QImage;
 class QgsFeature;
 class QgsVectorLayer;
+class QgsNetworkContentFetcher;
+class QgsDistanceArea;
 
 class CORE_EXPORT QgsComposerHtml: public QgsComposerMultiFrame
 {
@@ -38,7 +40,10 @@ class CORE_EXPORT QgsComposerHtml: public QgsComposerMultiFrame
     };
 
     QgsComposerHtml( QgsComposition* c, bool createUndoCommands );
+
+    //should be private - fix for QGIS 3.0
     QgsComposerHtml();
+
     ~QgsComposerHtml();
 
     /**Sets the source mode for item's HTML content.
@@ -238,8 +243,12 @@ class CORE_EXPORT QgsComposerHtml: public QgsComposerMultiFrame
 
     QgsFeature* mExpressionFeature;
     QgsVectorLayer* mExpressionLayer;
+    QgsDistanceArea* mDistanceArea;
+
     QString mUserStylesheet;
     bool mEnableUserStylesheet;
+
+    QgsNetworkContentFetcher* mFetcher;
 
     double htmlUnitsToMM(); //calculate scale factor
 
@@ -251,6 +260,9 @@ class CORE_EXPORT QgsComposerHtml: public QgsComposerMultiFrame
 
     /** Sets the current feature, the current layer and a list of local variable substitutions for evaluating expressions */
     void setExpressionContext( QgsFeature* feature, QgsVectorLayer* layer );
+
+    /**calculates the max width of frames in the html multiframe*/
+    double maxFrameWidth() const;
 };
 
 #endif // QGSCOMPOSERHTML_H

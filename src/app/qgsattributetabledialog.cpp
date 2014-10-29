@@ -172,7 +172,7 @@ QgsAttributeTableDialog::QgsAttributeTableDialog( QgsVectorLayer *theLayer, QWid
   mToggleEditingButton->blockSignals( false );
 
   mSaveEditsButton->setEnabled( mToggleEditingButton->isEnabled() && mLayer->isEditable() );
-  mOpenFieldCalculator->setEnabled(( canChangeAttributes || canAddAttributes ) && mLayer->isEditable() );
+  mAddAttribute->setEnabled(( canChangeAttributes || canAddAttributes ) && mLayer->isEditable() );
   mDeleteSelectedButton->setEnabled( canDeleteFeatures && mLayer->isEditable() );
   mAddFeature->setEnabled( canAddFeatures && mLayer->isEditable() && mLayer->geometryType() == QGis::NoGeometry );
   mAddFeature->setHidden( !canAddFeatures || mLayer->geometryType() != QGis::NoGeometry );
@@ -205,7 +205,7 @@ QgsAttributeTableDialog::QgsAttributeTableDialog( QgsVectorLayer *theLayer, QWid
   connect( mRunFieldCalc, SIGNAL( clicked() ), this, SLOT( updateFieldFromExpression() ) );
   // NW TODO Fix in 2.6 - Doesn't work with field model for some reason.
 //  connect( mUpdateExpressionText, SIGNAL( returnPressed() ), this, SLOT( updateFieldFromExpression() ) );
-  connect( mUpdateExpressionText, SIGNAL( fieldChanged( QString , bool ) ), this, SLOT( updateButtonStatus( QString, bool ) ) );
+  connect( mUpdateExpressionText, SIGNAL( fieldChanged( QString, bool ) ), this, SLOT( updateButtonStatus( QString, bool ) ) );
   mUpdateExpressionText->setLayer( mLayer );
   mUpdateExpressionText->setLeftHandButtonStyle( true );
   editingToggled();
@@ -384,7 +384,7 @@ void QgsAttributeTableDialog::filterColumnChanged( QObject* filterAction )
 void QgsAttributeTableDialog::filterExpressionBuilder()
 {
   // Show expression builder
-  QgsExpressionBuilderDialog dlg( mLayer, mFilterQuery->text() , this );
+  QgsExpressionBuilderDialog dlg( mLayer, mFilterQuery->text(), this );
   dlg.setWindowTitle( tr( "Expression based filter" ) );
 
   QgsDistanceArea myDa;
@@ -558,7 +558,7 @@ void QgsAttributeTableDialog::editingToggled()
   bool canDeleteFeatures = mLayer->dataProvider()->capabilities() & QgsVectorDataProvider::DeleteFeatures;
   bool canAddAttributes = mLayer->dataProvider()->capabilities() & QgsVectorDataProvider::AddAttributes;
   bool canAddFeatures = mLayer->dataProvider()->capabilities() & QgsVectorDataProvider::AddFeatures;
-  mOpenFieldCalculator->setEnabled(( canChangeAttributes || canAddAttributes ) && mLayer->isEditable() );
+  mAddAttribute->setEnabled(( canChangeAttributes || canAddAttributes ) && mLayer->isEditable() );
   mDeleteSelectedButton->setEnabled( canDeleteFeatures && mLayer->isEditable() );
   mAddFeature->setEnabled( canAddFeatures && mLayer->isEditable() && mLayer->geometryType() == QGis::NoGeometry );
 
@@ -579,23 +579,17 @@ void QgsAttributeTableDialog::on_mAddAttribute_clicked()
   QgsAddAttrDialog dialog( mLayer, this );
   if ( dialog.exec() == QDialog::Accepted )
   {
-    if ( dialog.mode() == QgsAddAttrDialog::VirtualField )
+    mLayer->beginEditCommand( tr( "Attribute added" ) );
+    if ( mLayer->addAttribute( dialog.field() ) )
     {
-      mLayer->addExpressionField( dialog.expression(), dialog.field() );
+      mLayer->endEditCommand();
     }
     else
     {
-      mLayer->beginEditCommand( tr( "Attribute added" ) );
-      if ( mLayer->addAttribute( dialog.field() ) )
-      {
-        mLayer->endEditCommand();
-      }
-      else
-      {
-        mLayer->destroyEditCommand();
-        QMessageBox::critical( this, tr( "Failed to add field" ), tr( "Failed to add field '%1' of type '%2'. Is the field name unique?" ).arg( dialog.field().name() ).arg( dialog.field().typeName() ) );
-      }
+      mLayer->destroyEditCommand();
+      QMessageBox::critical( this, tr( "Failed to add field" ), tr( "Failed to add field '%1' of type '%2'. Is the field name unique?" ).arg( dialog.field().name() ).arg( dialog.field().typeName() ) );
     }
+
 
     // update model - a field has been added or updated
     masterModel->reload( masterModel->index( 0, 0 ), masterModel->index( masterModel->rowCount() - 1, masterModel->columnCount() - 1 ) );

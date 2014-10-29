@@ -86,14 +86,16 @@ class GUI_EXPORT QgsRubberBand: public QgsMapCanvasItem
     void setColor( const QColor & color );
 
     /**
-     * Set the file color for the rubberband
+     * Set the fill color for the rubberband
      *  @param color  The color used to render this rubberband
+     *  @note Added in 2.6
      */
     void setFillColor( const QColor & color );
 
     /**
      * Set the border color for the rubberband
      *  @param color  The color used to render this rubberband
+     *  @note Added in 2.6
      */
     void setBorderColor( const QColor & color );
 
@@ -165,7 +167,7 @@ class GUI_EXPORT QgsRubberBand: public QgsMapCanvasItem
     /**
      * Removes the last point. Most useful in connection with undo operations
      */
-    void removeLastPoint( int geometryIndex = 0 , bool doUpdate = true );
+    void removeLastPoint( int geometryIndex = 0, bool doUpdate = true );
 
     /**
      * Moves the rubber band point specified by index. Note that if the rubber band is

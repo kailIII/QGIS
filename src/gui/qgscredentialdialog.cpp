@@ -68,6 +68,8 @@ void QgsCredentialDialog::requestCredentials( QString realm, QString *username, 
   if ( !leUsername->text().isEmpty() )
     lePassword->setFocus();
 
+  QWidget *activeWindow = qApp->activeWindow();
+
   QApplication::setOverrideCursor( Qt::ArrowCursor );
 
   QgsDebugMsg( "exec()" );
@@ -75,6 +77,9 @@ void QgsCredentialDialog::requestCredentials( QString realm, QString *username, 
   QgsDebugMsg( QString( "exec(): %1" ).arg( *ok ? "true" : "false" ) );
 
   QApplication::restoreOverrideCursor();
+
+  if ( activeWindow )
+    activeWindow->raise();
 
   if ( *ok )
   {

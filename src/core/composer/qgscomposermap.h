@@ -43,6 +43,7 @@ class QgsVectorLayer;
  *  \brief Object representing map window.
  */
 
+Q_NOWARN_DEPRECATED_PUSH
 class CORE_EXPORT QgsComposerMap : public QgsComposerItem
 {
     Q_OBJECT
@@ -809,7 +810,7 @@ class CORE_EXPORT QgsComposerMap : public QgsComposerItem
   public slots:
 
     /**Called if map canvas has changed*/
-    void updateCachedImage( );
+    void updateCachedImage();
     /**Call updateCachedImage if item is in render mode*/
     void renderModeUpdateCachedImage();
 
@@ -907,6 +908,9 @@ class CORE_EXPORT QgsComposerMap : public QgsComposerItem
 
     void init();
 
+    /**Resets the item tooltip to reflect current map id*/
+    void updateToolTip();
+
     /**Returns a list of the layers to render for this map item*/
     QStringList layersToRender() const;
 
@@ -945,6 +949,7 @@ class CORE_EXPORT QgsComposerMap : public QgsComposerItem
 
     friend class QgsComposerMapOverview; //to access mXOffset, mYOffset
 };
+Q_NOWARN_DEPRECATED_POP
 
 #endif
 
