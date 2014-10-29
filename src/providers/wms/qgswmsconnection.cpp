@@ -64,7 +64,6 @@ QgsWMSConnection::QgsWMSConnection( QString theConnName ) :
   {
     mUri.setParam( "authid", authid );
   }
-  mConnectionInfo.append( ",authid=" + authid );
 
   QString referer = settings.value( key + "/referer" ).toString();
   if ( !referer.isEmpty() )
