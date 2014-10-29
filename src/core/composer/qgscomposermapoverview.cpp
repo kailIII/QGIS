@@ -108,6 +108,8 @@ void QgsComposerMapOverview::draw( QPainter *painter )
 
   //workaround QT Bug #21329
   thisRectPoly.pop_back();
+  thisExtent.pop_back();
+
   //create transform from map coordinates to painter coordinates
   QTransform::quadToQuad( thisExtent, thisRectPoly, mapTransform );
   QPolygonF intersectPolygon;
@@ -178,7 +180,7 @@ bool QgsComposerMapOverview::readXML( const QDomElement &itemElem, const QDomDoc
   mCentered = ( itemElem.attribute( "centered", "0" ) != "0" );
 
   QDomElement frameStyleElem = itemElem.firstChildElement( "symbol" );
-  if ( !frameStyleElem.isNull( ) )
+  if ( !frameStyleElem.isNull() )
   {
     delete mFrameSymbol;
     mFrameSymbol = dynamic_cast<QgsFillSymbolV2*>( QgsSymbolLayerV2Utils::loadSymbol( frameStyleElem ) );

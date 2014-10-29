@@ -5,6 +5,9 @@ class QgsComposerItem : QgsComposerObject, QGraphicsRectItem
 {
 %TypeHeaderCode
 #include <qgscomposeritem.h>
+#include <qgscomposerarrow.h>
+#include <qgscomposerframe.h>
+#include <qgscomposeritemgroup.h>
 #include <qgscomposerlabel.h>
 #include <qgscomposerlegend.h>
 #include <qgscomposermap.h>
@@ -13,6 +16,7 @@ class QgsComposerItem : QgsComposerObject, QGraphicsRectItem
 #include <qgscomposerscalebar.h>
 #include <qgscomposershape.h>
 #include <qgscomposertable.h>
+#include <qgscomposertexttable.h>
 #include <qgscomposerattributetable.h>
 %End
 
@@ -25,16 +29,14 @@ class QgsComposerItem : QgsComposerObject, QGraphicsRectItem
     sipClass = sipClass_QgsComposerItem;
     *sipCppRet = static_cast<QgsComposerItem*>(sipCpp);
     break;
-#if 0
   case QgsComposerItem::ComposerArrow:
     sipClass = sipClass_QgsComposerArrow;
     *sipCppRet = static_cast<QgsComposerArrow*>(sipCpp);
-    break;
+    break; 
   case QgsComposerItem::ComposerItemGroup:
     sipClass = sipClass_QgsComposerItemGroup;
     *sipCppRet = static_cast<QgsComposerItemGroup*>(sipCpp);
     break;
-#endif
   case QgsComposerItem::ComposerLabel:
     sipClass = sipClass_QgsComposerLabel;
     *sipCppRet = static_cast<QgsComposerLabel*>(sipCpp);
@@ -71,12 +73,14 @@ class QgsComposerItem : QgsComposerObject, QGraphicsRectItem
     sipClass = sipClass_QgsComposerAttributeTable;
     *sipCppRet = static_cast<QgsComposerAttributeTable*>(sipCpp);
     break;
-/*
   case QgsComposerItem::ComposerTextTable:
     sipClass = sipClass_QgsComposerTextTable;
     *sipCppRet = static_cast<QgsComposerTextTable*>(sipCpp);
     break;
-*/
+  case QgsComposerItem::ComposerFrame:
+    sipClass = sipClass_QgsComposerFrame;
+    *sipCppRet = static_cast<QgsComposerFrame*>(sipCpp);
+    break;
   default:
     sipClass = 0;
   }
@@ -269,26 +273,47 @@ class QgsComposerItem : QgsComposerObject, QGraphicsRectItem
      * @see setFrameEnabled
      * @see frameOutlineWidth
      * @see frameJoinStyle
+     * @see frameOutlineColor
      */
     bool hasFrame() const;
 
     /**Set whether this item has a frame drawn around it or not.
      * @param drawFrame draw frame
-     * @returns nothing
      * @note introduced in 1.8
      * @see hasFrame
      * @see setFrameOutlineWidth
      * @see setFrameJoinStyle
+     * @see setFrameOutlineColor
      */
     void setFrameEnabled( const bool drawFrame );
+    
+    /**Sets frame outline color
+     * @param color new color for outline frame
+     * @note introduced in 2.6
+     * @see frameOutlineColor
+     * @see setFrameEnabled
+     * @see setFrameJoinStyle
+     * @see setFrameOutlineWidth
+     */
+    virtual void setFrameOutlineColor( const QColor& color );
+
+    /**Returns the frame's outline color. Only used if hasFrame is true.
+     * @returns frame outline color
+     * @note introduced in 2.6
+     * @see hasFrame
+     * @see setFrameOutlineColor
+     * @see frameJoinStyle
+     * @see setFrameOutlineColor
+     */
+    QColor frameOutlineColor() const;
 
     /**Sets frame outline width
      * @param outlineWidth new width for outline frame
-     * @returns nothing
      * @note introduced in 2.2
      * @see frameOutlineWidth
      * @see setFrameEnabled
      * @see setFrameJoinStyle
+     * @see setFrameOutlineColor
      */
     virtual void setFrameOutlineWidth( const double outlineWidth );
 
@@ -298,6 +323,7 @@ class QgsComposerItem : QgsComposerObject, QGraphicsRectItem
      * @see hasFrame
      * @see setFrameOutlineWidth
      * @see frameJoinStyle
+     * @see frameOutlineColor
      */
     double frameOutlineWidth() const;
 
@@ -307,16 +333,17 @@ class QgsComposerItem : QgsComposerObject, QGraphicsRectItem
      * @see hasFrame
      * @see setFrameJoinStyle
      * @see frameOutlineWidth
+     * @see frameOutlineColor
      */
     Qt::PenJoinStyle frameJoinStyle() const;
 
     /**Sets join style used when drawing the item's frame
      * @param style Join style for outline frame
-     * @returns nothing
      * @note introduced in 2.3
      * @see setFrameEnabled
      * @see frameJoinStyle
      * @see setFrameOutlineWidth
+     * @see setFrameOutlineColor
      */
     void setFrameJoinStyle( const Qt::PenJoinStyle style );
 
@@ -734,8 +761,17 @@ class QgsComposerItem : QgsComposerObject, QGraphicsRectItem
     void deleteVAlignSnapItem();
     void deleteAlignItems();
 
-    /**Update an item rect to consider data defined position and size of item*/
-    QRectF evalItemRect( const QRectF &newRect );
+    /**Evaluates an item's bounding rect to consider data defined position and size of item
+     * and reference point
+     * @param newRect target bouding rect for item
+     * @param resizeOnly set to true if the item is only being resized. If true then
+     * the position of the returned rect will be adjusted to account for the item's
+     * position mode
+     * @returns bounding box rectangle for item after data defined size and position have been
+     * set and position mode has been accounted for
+     * @note added in QGIS 2.5
+    */
+    QRectF evalItemRect( const QRectF &newRect, const bool resizeOnly = false );
     
     /**Returns whether the item should be drawn in the current context
      * @returns true if item should be drawn

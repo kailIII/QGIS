@@ -914,7 +914,7 @@ void QgsOptions::on_cbxProjectDefaultNew_toggled( bool checked )
   }
 }
 
-void QgsOptions::on_pbnProjectDefaultSetCurrent_clicked( )
+void QgsOptions::on_pbnProjectDefaultSetCurrent_clicked()
 {
   QString fileName = QgsApplication::qgisSettingsDirPath() + QString( "project_default.qgs" );
   if ( QgsProject::instance()->write( QFileInfo( fileName ) ) )
@@ -927,7 +927,7 @@ void QgsOptions::on_pbnProjectDefaultSetCurrent_clicked( )
   }
 }
 
-void QgsOptions::on_pbnProjectDefaultReset_clicked( )
+void QgsOptions::on_pbnProjectDefaultReset_clicked()
 {
   QString fileName = QgsApplication::qgisSettingsDirPath() + QString( "project_default.qgs" );
   if ( QFile::exists( fileName ) )
@@ -937,7 +937,7 @@ void QgsOptions::on_pbnProjectDefaultReset_clicked( )
   cbxProjectDefaultNew->setChecked( false );
 }
 
-void QgsOptions::on_pbnTemplateFolderBrowse_pressed( )
+void QgsOptions::on_pbnTemplateFolderBrowse_pressed()
 {
   QString newDir = QFileDialog::getExistingDirectory( 0, tr( "Choose a directory to store project template files" ),
                    leTemplateFolder->text() );
@@ -947,7 +947,7 @@ void QgsOptions::on_pbnTemplateFolderBrowse_pressed( )
   }
 }
 
-void QgsOptions::on_pbnTemplateFolderReset_pressed( )
+void QgsOptions::on_pbnTemplateFolderReset_pressed()
 {
   leTemplateFolder->setText( QgsApplication::qgisSettingsDirPath() + QString( "project_templates" ) );
 }
@@ -1782,7 +1782,7 @@ void QgsOptions::loadGdalDriverList()
   mLoadedGdalDriverList = true;
 
   // allow to retrieve metadata from all drivers, they will be skipped again when saving
-  CPLSetConfigOption( "GDAL_SKIP",  "" );
+  CPLSetConfigOption( "GDAL_SKIP", "" );
   GDALAllRegister();
 
   int myGdalDriverCount = GDALGetDriverCount();
@@ -2077,12 +2077,12 @@ void QgsOptions::saveDefaultDatumTransformations()
     int srcDatumTransform = item->text( 2 ).toInt( &conversionOk );
     if ( conversionOk )
     {
-      s.setValue( srcAuthId + "//" + destAuthId + "_srcTransform" , srcDatumTransform );
+      s.setValue( srcAuthId + "//" + destAuthId + "_srcTransform", srcDatumTransform );
     }
     int destDatumTransform = item->text( 3 ).toInt( &conversionOk );
     if ( conversionOk )
     {
-      s.setValue( srcAuthId + "//" + destAuthId + "_destTransform" , destDatumTransform );
+      s.setValue( srcAuthId + "//" + destAuthId + "_destTransform", destDatumTransform );
     }
   }
 

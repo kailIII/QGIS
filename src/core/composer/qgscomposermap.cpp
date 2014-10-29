@@ -112,6 +112,7 @@ QgsComposerMap::QgsComposerMap( QgsComposition *composition )
   mCurrentRectangle = rect();
 
   init();
+  updateToolTip();
 }
 
 void QgsComposerMap::init()
@@ -119,8 +120,6 @@ void QgsComposerMap::init()
   mGridStack = new QgsComposerMapGridStack( this );
   mOverviewStack = new QgsComposerMapOverviewStack( this );
   connectUpdateSlot();
-
-  setToolTip( tr( "Map %1" ).arg( mId ) );
 
   // data defined strings
   mDataDefinedNames.insert( QgsComposerObject::MapRotation, QString( "dataDefinedMapRotation" ) );
@@ -130,6 +129,11 @@ void QgsComposerMap::init()
   mDataDefinedNames.insert( QgsComposerObject::MapXMax, QString( "dataDefinedMapXMax" ) );
   mDataDefinedNames.insert( QgsComposerObject::MapYMax, QString( "dataDefinedMapYMax" ) );
   mDataDefinedNames.insert( QgsComposerObject::MapAtlasMargin, QString( "dataDefinedMapAtlasMargin" ) );
+}
+
+void QgsComposerMap::updateToolTip()
+{
+  setToolTip( tr( "Map %1" ).arg( mId ) );
 }
 
 void QgsComposerMap::adjustExtentToItemShape( double itemWidth, double itemHeight, QgsRectangle& extent ) const
@@ -274,7 +278,7 @@ void QgsComposerMap::cache( void )
     h = 5000;
   }
 
-  mCacheImage = QImage( w, h,  QImage::Format_ARGB32 );
+  mCacheImage = QImage( w, h, QImage::Format_ARGB32 );
 
   // set DPI of the image
   mCacheImage.setDotsPerMeterX( 1000 * w / widthMM );
@@ -425,7 +429,7 @@ void QgsComposerMap::paint( QPainter* painter, const QStyleOptionGraphicsItem* i
     mDrawing = false;
   }
 
-  painter->setClipRect( thisPaintRect , Qt::NoClip );
+  painter->setClipRect( thisPaintRect, Qt::NoClip );
   if ( shouldDrawPart( OverviewMapExtent ) &&
        ( mComposition->plotStyle() != QgsComposition::Preview || mPreviewMode != Rectangle ) )
   {
@@ -703,7 +707,7 @@ void QgsComposerMap::setSceneRect( const QRectF& rectangle )
   QgsComposerItem::setSceneRect( rectangle );
 
   //QGraphicsRectItem::update();
-  double newHeight = mExtent.width() * h / w ;
+  double newHeight = mExtent.width() * h / w;
   mExtent = QgsRectangle( mExtent.xMinimum(), mExtent.yMinimum(), mExtent.xMaximum(), mExtent.yMinimum() + newHeight );
 
   //recalculate data defined scale and extents
@@ -1246,7 +1250,7 @@ bool QgsComposerMap::writeXML( QDomElement& elem, QDomDocument & doc ) const
   composerMapElem.appendChild( extentElem );
 
   //map rotation
-  composerMapElem.setAttribute( "mapRotation",  QString::number( mMapRotation ) );
+  composerMapElem.setAttribute( "mapRotation", QString::number( mMapRotation ) );
 
   //layer set
   QDomElement layerSetElem = doc.createElement( "LayerSet" );
@@ -1292,6 +1296,7 @@ bool QgsComposerMap::readXML( const QDomElement& itemElem, const QDomDocument& d
   if ( idRead != "not found" )
   {
     mId = idRead.toInt();
+    updateToolTip();
   }
   mPreviewMode = Rectangle;
 
@@ -1398,7 +1403,7 @@ bool QgsComposerMap::readXML( const QDomElement& itemElem, const QDomDocument& d
     mapGrid->setBlendMode( QgsMapRenderer::getCompositionMode(( QgsMapRenderer::BlendMode ) itemElem.attribute( "gridBlendMode", "0" ).toUInt() ) );
     QDomElement gridSymbolElem = gridElem.firstChildElement( "symbol" );
     QgsLineSymbolV2* lineSymbol = 0;
-    if ( gridSymbolElem.isNull( ) )
+    if ( gridSymbolElem.isNull() )
     {
       //old project file, read penWidth /penColorRed, penColorGreen, penColorBlue
       lineSymbol = QgsLineSymbolV2::createSimple( QgsStringMap() );
@@ -1925,6 +1930,8 @@ void QgsComposerMap::mapPolygon( const QgsRectangle& extent, QPolygonF& poly ) c
     poly << QPointF( extent.xMaximum(), extent.yMaximum() );
     poly << QPointF( extent.xMaximum(), extent.yMinimum() );
     poly << QPointF( extent.xMinimum(), extent.yMinimum() );
+    //ensure polygon is closed by readding first point
+    poly << QPointF( poly.at( 0 ) );
     return;
   }
 
@@ -1955,6 +1962,9 @@ void QgsComposerMap::mapPolygon( const QgsRectangle& extent, QPolygonF& poly ) c
   dy = rotationPoint.y() - extent.yMinimum();
   QgsComposerUtils::rotate( mEvaluatedMapRotation, dx, dy );
   poly << QPointF( rotationPoint.x() - dx, rotationPoint.y() - dy );
+
+  //ensure polygon is closed by readding first point
+  poly << QPointF( poly.at( 0 ) );
 }
 
 QPolygonF QgsComposerMap::visibleExtentPolygon() const
@@ -2263,6 +2273,7 @@ void QgsComposerMap::assignFreeId()
     }
   }
   mId = maxId + 1;
+  updateToolTip();
 }
 
 bool QgsComposerMap::imageSizeConsideringRotation( double& width, double& height ) const

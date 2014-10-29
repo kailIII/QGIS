@@ -25,9 +25,10 @@
 
 #include <limits>
 
-QgsMapToolFillRing::QgsMapToolFillRing( QgsMapCanvas* canvas ): QgsMapToolCapture( canvas, QgsMapToolCapture::CapturePolygon )
+QgsMapToolFillRing::QgsMapToolFillRing( QgsMapCanvas* canvas )
+    : QgsMapToolCapture( canvas, QgsMapToolCapture::CapturePolygon )
 {
-
+  mToolName = tr( "Fill ring" );
 }
 
 QgsMapToolFillRing::~QgsMapToolFillRing()
@@ -72,6 +73,9 @@ void QgsMapToolFillRing::canvasReleaseEvent( QMouseEvent * e )
   }
   else if ( e->button() == Qt::RightButton )
   {
+    if ( !isCapturing() )
+      return;
+
     deleteTempRubberBand();
 
     closePolygon();
@@ -151,7 +155,7 @@ void QgsMapToolFillRing::canvasReleaseEvent( QMouseEvent * e )
       while ( fit.nextFeature( f ) )
       {
         //create QgsFeature with wkb representation
-        QgsFeature* ft = new QgsFeature( vlayer->pendingFields(),  0 );
+        QgsFeature* ft = new QgsFeature( vlayer->pendingFields(), 0 );
 
         QgsGeometry *g;
         g = QgsGeometry::fromPolygon( QgsPolygon() << points().toVector() );

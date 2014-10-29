@@ -859,7 +859,7 @@ QgisApp::QgisApp( QSplashScreen *splash, bool restorePlugins, QWidget * parent, 
   mLogViewer->setShowToolTips( true );
 } // QgisApp ctor
 
-QgisApp::QgisApp( )
+QgisApp::QgisApp()
     : QMainWindow( 0, 0 )
     , mOverviewMapCursor( 0 )
     , mQgisInterface( 0 )
@@ -1152,7 +1152,7 @@ void QgisApp::createActions()
   connect( mActionNewVectorLayer, SIGNAL( triggered() ), this, SLOT( newVectorLayer() ) );
   connect( mActionNewSpatiaLiteLayer, SIGNAL( triggered() ), this, SLOT( newSpatialiteLayer() ) );
   connect( mActionShowRasterCalculator, SIGNAL( triggered() ), this, SLOT( showRasterCalculator() ) );
-  connect( mActionEmbedLayers, SIGNAL( triggered() ) , this, SLOT( embedLayers() ) );
+  connect( mActionEmbedLayers, SIGNAL( triggered() ), this, SLOT( embedLayers() ) );
   connect( mActionAddLayerDefinition, SIGNAL( triggered() ), this, SLOT( addLayerDefinition() ) );
   connect( mActionAddOgrLayer, SIGNAL( triggered() ), this, SLOT( addVectorLayer() ) );
   connect( mActionAddRasterLayer, SIGNAL( triggered() ), this, SLOT( addRasterLayer() ) );
@@ -1188,6 +1188,8 @@ void QgisApp::createActions()
   connect( mActionRemoveAllFromOverview, SIGNAL( triggered() ), this, SLOT( removeAllFromOverview() ) );
   connect( mActionShowAllLayers, SIGNAL( triggered() ), this, SLOT( showAllLayers() ) );
   connect( mActionHideAllLayers, SIGNAL( triggered() ), this, SLOT( hideAllLayers() ) );
+  connect( mActionShowSelectedLayers, SIGNAL( triggered() ), this, SLOT( showSelectedLayers() ) );
+  connect( mActionHideSelectedLayers, SIGNAL( triggered() ), this, SLOT( hideSelectedLayers() ) );
 
   // Plugin Menu Items
 
@@ -1678,10 +1680,11 @@ void QgisApp::createToolBars()
 
 void QgisApp::createStatusBar()
 {
-  //
+  //remove borders from children under Windows
+  statusBar()->setStyleSheet( "QStatusBar::item {border: none;}" );
+
   // Add a panel to the status bar for the scale, coords and progress
   // And also rendering suppression checkbox
-  //
   mProgressBar = new QProgressBar( statusBar() );
   mProgressBar->setObjectName( "mProgressBar" );
   mProgressBar->setMaximumWidth( 100 );
@@ -1888,6 +1891,8 @@ void QgisApp::setTheme( QString theThemeName )
   mActionAddAllToOverview->setIcon( QgsApplication::getThemeIcon( "/mActionAddAllToOverview.svg" ) );
   mActionHideAllLayers->setIcon( QgsApplication::getThemeIcon( "/mActionHideAllLayers.png" ) );
   mActionShowAllLayers->setIcon( QgsApplication::getThemeIcon( "/mActionShowAllLayers.png" ) );
+  mActionHideSelectedLayers->setIcon( QgsApplication::getThemeIcon( "/mActionHideSelectedLayers.png" ) );
+  mActionShowSelectedLayers->setIcon( QgsApplication::getThemeIcon( "/mActionShowSelectedLayers.png" ) );
   mActionRemoveAllFromOverview->setIcon( QgsApplication::getThemeIcon( "/mActionRemoveAllFromOverview.svg" ) );
   mActionToggleFullScreen->setIcon( QgsApplication::getThemeIcon( "/mActionToggleFullScreen.png" ) );
   mActionProjectProperties->setIcon( QgsApplication::getThemeIcon( "/mActionProjectProperties.png" ) );
@@ -2275,7 +2280,7 @@ QToolBar *QgisApp::addToolBar( QString name )
   return toolBar;
 }
 
-void QgisApp::addToolBar( QToolBar* toolBar , Qt::ToolBarArea area )
+void QgisApp::addToolBar( QToolBar* toolBar, Qt::ToolBarArea area )
 {
   QMainWindow::addToolBar( area, toolBar );
   // add to the Toolbar submenu
@@ -2329,6 +2334,8 @@ void QgisApp::initLayerTreeView()
   connect( mLayerTreeView, SIGNAL( doubleClicked( QModelIndex ) ), this, SLOT( layerTreeViewDoubleClicked( QModelIndex ) ) );
   connect( mLayerTreeView, SIGNAL( currentLayerChanged( QgsMapLayer* ) ), this, SLOT( activeLayerChanged( QgsMapLayer* ) ) );
   connect( mLayerTreeView->selectionModel(), SIGNAL( currentChanged( QModelIndex, QModelIndex ) ), this, SLOT( updateNewLayerInsertionPoint() ) );
+  connect( QgsProject::instance()->layerTreeRegistryBridge(), SIGNAL( addedLayersToLayerTree( QList<QgsMapLayer*> ) ),
+           this, SLOT( autoSelectAddedLayer( QList<QgsMapLayer*> ) ) );
 
   // add group tool button
   QToolButton* btnAddGroup = new QToolButton;
@@ -2351,7 +2358,7 @@ void QgisApp::initLayerTreeView()
   mBtnFilterLegend->setCheckable( true );
   mBtnFilterLegend->setToolTip( tr( "Filter Legend By Map Content" ) );
   mBtnFilterLegend->setIcon( QgsApplication::getThemeIcon( "/mActionFilter.png" ) );
-  connect( mBtnFilterLegend, SIGNAL( clicked() ), this,  SLOT( toggleFilterLegendByMap() ) );
+  connect( mBtnFilterLegend, SIGNAL( clicked() ), this, SLOT( toggleFilterLegendByMap() ) );
 
   // expand / collapse tool buttons
   QToolButton* btnExpandAll = new QToolButton;
@@ -2454,6 +2461,15 @@ void QgisApp::updateNewLayerInsertionPoint()
   QgsProject::instance()->layerTreeRegistryBridge()->setLayerInsertionPoint( parentGroup, index );
 }
 
+void QgisApp::autoSelectAddedLayer( QList<QgsMapLayer*> layers )
+{
+  if ( layers.count() )
+  {
+    QgsLayerTreeLayer* nodeLayer = QgsProject::instance()->layerTreeRoot()->findLayer( layers[0]->id() );
+    QModelIndex index = mLayerTreeView->layerTreeModel()->node2index( nodeLayer );
+    mLayerTreeView->setCurrentIndex( index );
+  }
+}
 
 void QgisApp::createMapTips()
 {
@@ -2503,7 +2519,7 @@ void QgisApp::projectReadDecorationItems()
 {
   foreach ( QgsDecorationItem* item, mDecorationItems )
   {
-    item->projectRead( );
+    item->projectRead();
   }
 }
 
@@ -3101,7 +3117,7 @@ void QgisApp::askUserForOGRSublayers( QgsVectorLayer *layer )
     }
     QgsDebugMsg( "Layer type " + layertype );
     // the user has done his choice
-    loadOGRSublayers( layertype , uri, chooseSublayersDialog.selectionNames() );
+    loadOGRSublayers( layertype, uri, chooseSublayersDialog.selectionNames() );
   }
 }
 
@@ -3136,7 +3152,7 @@ void QgisApp::loadOGRSublayers( QString layertype, QString uri, QStringList list
       composedURI += "|geometrytype=" + layerType;
     }
 
-    // addVectorLayer( composedURI,  list.at( i ), "ogr" );
+    // addVectorLayer( composedURI, list.at( i ), "ogr" );
 
     QgsDebugMsg( "Creating new vector layer using " + composedURI );
     QString name = list.at( i );
@@ -3618,7 +3634,7 @@ void QgisApp::fileOpenAfterLaunch()
     settings.setValue( "/qgis/projOpenedOKAtLaunch", QVariant( true ) );
 
     // set auto-open project back to 'New' to avoid re-opening bad project
-    settings.setValue( "/qgis/projOpenAtLaunch" , QVariant( 0 ) );
+    settings.setValue( "/qgis/projOpenAtLaunch", QVariant( 0 ) );
 
     messageBar()->pushMessage( autoOpenMsgTitle,
                                tr( "Failed to open: %1" ).arg( projPath ),
@@ -3652,7 +3668,7 @@ void QgisApp::fileOpenAfterLaunch()
   if ( QFile::exists( projPath ) )
   {
     // set flag to check on next app launch if the following project opened OK
-    settings.setValue( "/qgis/projOpenedOKAtLaunch" , QVariant( false ) );
+    settings.setValue( "/qgis/projOpenedOKAtLaunch", QVariant( false ) );
 
     if ( !addProject( projPath ) )
     {
@@ -3679,7 +3695,7 @@ void QgisApp::fileOpenAfterLaunch()
 void QgisApp::fileOpenedOKAfterLaunch()
 {
   QSettings settings;
-  settings.setValue( "/qgis/projOpenedOKAtLaunch" , QVariant( true ) );
+  settings.setValue( "/qgis/projOpenedOKAtLaunch", QVariant( true ) );
 }
 
 void QgisApp::fileNewFromTemplateAction( QAction * qAction )
@@ -3788,7 +3804,6 @@ void QgisApp::enableProjectMacros()
   // load macros
   QgsPythonRunner::run( "qgis.utils.reloadProjectMacros()" );
 }
-
 
 /**
   adds a saved project to qgis, usually called on startup by specifying a
@@ -4440,6 +4455,35 @@ void QgisApp::showAllLayers()
 
   foreach ( QgsLayerTreeLayer* nodeLayer, mLayerTreeView->layerTreeModel()->rootGroup()->findLayers() )
     nodeLayer->setVisible( Qt::Checked );
+}
+
+//reimplements method from base (gui) class
+void QgisApp::hideSelectedLayers()
+{
+  QgsDebugMsg( "hiding selected layers!" );
+
+  foreach ( QgsLayerTreeNode* node, mLayerTreeView->selectedNodes() )
+  {
+    if ( QgsLayerTree::isGroup( node ) )
+      QgsLayerTree::toGroup( node )->setVisible( Qt::Unchecked );
+    else if ( QgsLayerTree::isLayer( node ) )
+      QgsLayerTree::toLayer( node )->setVisible( Qt::Unchecked );
+  }
+}
+
+
+// reimplements method from base (gui) class
+void QgisApp::showSelectedLayers()
+{
+  QgsDebugMsg( "show selected layers!" );
+
+  foreach ( QgsLayerTreeNode* node, mLayerTreeView->selectedNodes() )
+  {
+    if ( QgsLayerTree::isGroup( node ) )
+      QgsLayerTree::toGroup( node )->setVisible( Qt::Checked );
+    else if ( QgsLayerTree::isLayer( node ) )
+      QgsLayerTree::toLayer( node )->setVisible( Qt::Checked );
+  }
 }
 
 
@@ -5354,7 +5398,19 @@ void QgisApp::deleteComposer( QgsComposer* c )
   mPrintComposersMenu->removeAction( c->windowAction() );
   markDirty();
   emit composerRemoved( c->view() );
+
+  //save a reference to the composition
+  QgsComposition* composition = c->composition();
+
+  //first, delete the composer. This must occur before deleting the composition as some of the cleanup code in
+  //composer or in composer item widgets may require the composition to still be around
   delete c;
+
+  //next, delete the composition
+  if ( composition )
+  {
+    delete composition;
+  }
 }
 
 QgsComposer* QgisApp::duplicateComposer( QgsComposer* currentComposer, QString title )
@@ -5444,8 +5500,19 @@ void QgisApp::deletePrintComposers()
   for ( ; it != mPrintComposers.end(); ++it )
   {
     emit composerWillBeRemoved(( *it )->view() );
-    delete(( *it )->composition() );
+
+    //save a reference to the composition
+    QgsComposition* composition = ( *it )->composition();
+
+    //first, delete the composer. This must occur before deleting the composition as some of the cleanup code in
+    //composer or in composer item widgets may require the composition to still be around
     delete( *it );
+
+    //next, delete the composition
+    if ( composition )
+    {
+      delete composition;
+    }
   }
   mPrintComposers.clear();
   mLastComposerId = 0;
@@ -5966,6 +6033,8 @@ void QgisApp::editPaste( QgsMapLayer *destinationLayer )
         dstAttr[ dst ] = pasteVectorLayer->dataProvider()->defaultValue( dst );
         if ( !dstAttr[ dst ].isNull() )
           continue;
+        else if ( pasteVectorLayer->providerType() == "spatialite" )
+          continue;
       }
 
       dstAttr[ dst ] = srcAttr[ src ];
@@ -6009,20 +6078,20 @@ void QgisApp::editPaste( QgsMapLayer *destinationLayer )
   {
     messageBar()->pushMessage( tr( "Paste features" ),
                                tr( "no features could be successfully pasted." ),
-                               QgsMessageBar::WARNING , messageTimeout() );
+                               QgsMessageBar::WARNING, messageTimeout() );
 
   }
   else if ( nCopiedFeatures == nTotalFeatures )
   {
     messageBar()->pushMessage( tr( "Paste features" ),
                                tr( "%1 features were successfully pasted." ).arg( nCopiedFeatures ),
-                               QgsMessageBar::INFO , messageTimeout() );
+                               QgsMessageBar::INFO, messageTimeout() );
   }
   else
   {
     messageBar()->pushMessage( tr( "Paste features" ),
                                tr( "%1 of %2 features could be successfully pasted." ).arg( nCopiedFeatures ).arg( nTotalFeatures ),
-                               QgsMessageBar::WARNING , messageTimeout() );
+                               QgsMessageBar::WARNING, messageTimeout() );
   }
 
   mMapCanvas->refresh();
@@ -6139,7 +6208,7 @@ QgsVectorLayer *QgisApp::pasteToNewMemoryVector()
 
   if ( !message.isEmpty() )
   {
-    QMessageBox::warning( this, tr( "Warning" ), message , QMessageBox::Ok );
+    QMessageBox::warning( this, tr( "Warning" ), message, QMessageBox::Ok );
     return 0;
   }
 
@@ -6790,7 +6859,7 @@ void QgisApp::userCenter()
 
   mMapCanvas->setExtent(
     QgsRectangle(
-      x - r.width() / 2.0,  y - r.height() / 2.0,
+      x - r.width() / 2.0, y - r.height() / 2.0,
       x + r.width() / 2.0, y + r.height() / 2.0
     )
   );
@@ -6925,7 +6994,7 @@ void QgisApp::duplicateLayers( QList<QgsMapLayer *> lyrList )
     {
       msgBars.append( new QgsMessageBarItem(
                         tr( "Duplicate layer: " ),
-                        tr( "%1 (duplication resulted in invalid layer)" ).arg( selectedLyr->name() ) ,
+                        tr( "%1 (duplication resulted in invalid layer)" ).arg( selectedLyr->name() ),
                         QgsMessageBar::WARNING,
                         0,
                         mInfoBar ) );
@@ -9014,7 +9083,6 @@ void QgisApp::activateDeactivateLayerRelatedActions( QgsMapLayer* layer )
 
     bool canChangeAttributes = dprovider->capabilities() & QgsVectorDataProvider::ChangeAttributeValues;
     bool canDeleteFeatures = dprovider->capabilities() & QgsVectorDataProvider::DeleteFeatures;
-    bool canAddAttributes = dprovider->capabilities() & QgsVectorDataProvider::AddAttributes;
     bool canAddFeatures = dprovider->capabilities() & QgsVectorDataProvider::AddFeatures;
     bool canSupportEditing = dprovider->capabilities() & QgsVectorDataProvider::EditingCapabilities;
     bool canChangeGeometry = dprovider->capabilities() & QgsVectorDataProvider::ChangeGeometries;
@@ -9146,7 +9214,7 @@ void QgisApp::activateDeactivateLayerRelatedActions( QgsMapLayer* layer )
         mActionAddFeature->setIcon( QgsApplication::getThemeIcon( "/mActionNewTableRow.png" ) );
       }
 
-      mActionOpenFieldCalc->setEnabled( isEditable && ( canChangeAttributes || canAddAttributes ) );
+      mActionOpenFieldCalc->setEnabled( true );
 
       return;
     }
@@ -9911,6 +9979,21 @@ void QgisApp::namAuthenticationRequired( QNetworkReply *reply, QAuthenticator *a
 {
   QString username = auth->user();
   QString password = auth->password();
+
+  if ( username.isEmpty() && password.isEmpty() && reply->request().hasRawHeader( "Authorization" ) )
+  {
+    QByteArray header( reply->request().rawHeader( "Authorization" ) );
+    if ( header.startsWith( "Basic " ) )
+    {
+      QByteArray auth( QByteArray::fromBase64( header.mid( 6 ) ) );
+      int pos = auth.indexOf( ":" );
+      if ( pos >= 0 )
+      {
+        username = auth.left( pos );
+        password = auth.mid( pos + 1 );
+      }
+    }
+  }
 
   {
     QMutexLocker lock( QgsCredentials::instance()->mutex() );

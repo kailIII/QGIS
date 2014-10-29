@@ -32,6 +32,8 @@ email                : morb at ozemail dot com dot au
 #include "qgsmessagelog.h"
 #include "qgsgeometryvalidator.h"
 
+#include <QDebug>
+
 #ifndef Q_WS_WIN
 #include <netinet/in.h>
 #else
@@ -96,7 +98,7 @@ static void throwGEOSException( const char *fmt, ... )
   vsnprintf( buffer, sizeof buffer, fmt, ap );
   va_end( ap );
 
-  QgsDebugMsg( QString( "GEOS exception: %1" ).arg( buffer ) );
+  qWarning() << QString( "GEOS exception: %1" ).arg( buffer );
 
   throw GEOSException( QString::fromUtf8( buffer ) );
 }
@@ -268,7 +270,7 @@ static GEOSGeometry *createGeosLinearRing( const QgsPolyline& polyline )
 {
   GEOSCoordSequence *coord = 0;
 
-  if ( polyline.count() == 0 )
+  if ( polyline.count() <= 2 )
     return 0;
 
   try
@@ -282,6 +284,11 @@ static GEOSGeometry *createGeosLinearRing( const QgsPolyline& polyline )
     }
     else
     {
+      // XXX [MD] this exception should not be silenced!
+      // this is here just because maptopixel simplification can return invalid linear rings
+      if ( polyline.count() == 3 ) //-> Avoid 'GEOS::IllegalArgumentException: Invalid number of points in LinearRing found 3 - must be 0 or >= 4'
+        return 0;
+
       coord = createGeosCoordSequence( polyline );
     }
 
@@ -352,7 +359,19 @@ static GEOSGeometry *createGeosPolygon( const QgsPolygon& polygon )
   try
   {
     for ( int i = 0; i < polygon.count(); i++ )
-      geoms << createGeosLinearRing( polygon[i] );
+    {
+      GEOSGeometry *ring = createGeosLinearRing( polygon[i] );
+      if ( !ring )
+      {
+        // something went really wrong - exit
+        for ( int j = 0; j < geoms.count(); j++ )
+          GEOSGeom_destroy_r( geosinit.ctxt, geoms[j] );
+        // XXX [MD] we just silently return here - but we shouldn't
+        // this is just because maptopixel simplification can return invalid linear rings
+        return 0;
+      }
+      geoms << ring;
+    }
 
     return createGeosPolygon( geoms );
   }
@@ -4063,7 +4082,8 @@ bool QgsGeometry::exportWkbToGeos() const
             sequence << QgsPoint( x, y );
           }
 
-          rings << createGeosLinearRing( sequence );
+          GEOSGeometry *ring = createGeosLinearRing( sequence );
+          if ( ring ) rings << ring;
         }
         mGeos = createGeosPolygon( rings );
         mDirtyGeos = false;
@@ -4110,10 +4130,12 @@ bool QgsGeometry::exportWkbToGeos() const
               sequence << QgsPoint( x, y );
             }
 
-            rings << createGeosLinearRing( sequence );
+            GEOSGeometry *ring = createGeosLinearRing( sequence );
+            if ( ring ) rings << ring;
           }
 
-          polygons << createGeosPolygon( rings );
+          GEOSGeometry *polygon = createGeosPolygon( rings );
+          if ( polygon ) polygons << polygon;
         }
         mGeos = createGeosCollection( GEOS_MULTIPOLYGON, polygons );
         mDirtyGeos = false;
@@ -4868,7 +4890,15 @@ GEOSGeometry* QgsGeometry::reshapePolygon( const GEOSGeometry* polygon, const GE
 
   GEOSGeom_destroy_r( geosinit.ctxt, reshapeResult );
 
-  newRing = GEOSGeom_createLinearRing_r( geosinit.ctxt, newCoordSequence );
+  try
+  {
+    newRing = GEOSGeom_createLinearRing_r( geosinit.ctxt, newCoordSequence );
+  }
+  catch ( GEOSException &e )
+  {
+    QgsMessageLog::logMessage( QObject::tr( "Exception: %1" ).arg( e.what() ), QObject::tr( "GEOS" ) );
+  }
+
   if ( !newRing )
   {
     delete [] innerRings;
@@ -5212,7 +5242,7 @@ int QgsGeometry::lineContainedInLine( const GEOSGeometry* line1, const GEOSGeome
     return -1;
   }
 
-  double bufferDistance = pow( 1.0L, geomDigits( line2 ) - 11 );
+  double bufferDistance = pow( 10.0L, geomDigits( line2 ) - 11 );
 
   GEOSGeometry* bufferGeom = GEOSBuffer_r( geosinit.ctxt, line2, bufferDistance, DEFAULT_QUADRANT_SEGMENTS );
   if ( !bufferGeom )
@@ -5242,7 +5272,7 @@ int QgsGeometry::pointContainedInLine( const GEOSGeometry* point, const GEOSGeom
   if ( !point || !line )
     return -1;
 
-  double bufferDistance = pow( 1.0L, geomDigits( line ) - 11 );
+  double bufferDistance = pow( 10.0L, geomDigits( line ) - 11 );
 
   GEOSGeometry* lineBuffer = GEOSBuffer_r( geosinit.ctxt, line, bufferDistance, 8 );
   if ( !lineBuffer )
@@ -5258,7 +5288,7 @@ int QgsGeometry::pointContainedInLine( const GEOSGeometry* point, const GEOSGeom
 
 int QgsGeometry::geomDigits( const GEOSGeometry* geom )
 {
-  GEOSGeometry* bbox = GEOSEnvelope_r( geosinit.ctxt,  geom );
+  GEOSGeometry* bbox = GEOSEnvelope_r( geosinit.ctxt, geom );
   if ( !bbox )
     return -1;
 
@@ -5597,7 +5627,7 @@ double QgsGeometry::distance( QgsGeometry& geom )
 
   try
   {
-    GEOSDistance_r( geosinit.ctxt,  mGeos, geom.mGeos, &dist );
+    GEOSDistance_r( geosinit.ctxt, mGeos, geom.mGeos, &dist );
   }
   CATCH_GEOS( -1.0 )
 
