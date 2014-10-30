@@ -132,6 +132,12 @@ class CORE_EXPORT QgsAuthConfigPkiPaths: public QgsAuthConfigBase
     bool issuerSelfSigned() const { return mIssuerSelf; }
     void setIssuerSelfSigned( bool selfsigned ) { mIssuerSelf = selfsigned; }
 
+    const QString certAsPem() const;
+
+    const QStringList keyAsPem( bool reencrypt = true ) const;
+
+    const QString issuerAsPem() const;
+
     bool isValid( bool validateid = false ) const;
 
     const QString configString() const;

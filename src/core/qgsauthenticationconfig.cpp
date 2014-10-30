@@ -168,7 +168,7 @@ void QgsAuthConfigBasic::loadConfigString( const QString& config )
 }
 
 //////////////////////////////////////////////
-// QgsAuthConfigPki
+// QgsAuthConfigPkiPaths
 //////////////////////////////////////////////
 
 QgsAuthConfigPkiPaths::QgsAuthConfigPkiPaths()
@@ -179,6 +179,32 @@ QgsAuthConfigPkiPaths::QgsAuthConfigPkiPaths()
     , mIssuerId( QString() )
     , mIssuerSelf( false )
 {
+}
+
+const QString QgsAuthConfigPkiPaths::certAsPem() const
+{
+  if ( !isValid() )
+    return QString();
+
+  return QString( QgsAuthProviderPkiPaths::certAsPem( certId() ) );
+}
+
+const QStringList QgsAuthConfigPkiPaths::keyAsPem( bool reencrypt ) const
+{
+  if ( !isValid() )
+    return QStringList() << QString() << QString();
+
+  QString algtype;
+  QByteArray keydata( QgsAuthProviderPkiPaths::keyAsPem( keyId(), keyPassphrase(), &algtype, reencrypt ) );
+  return QStringList() << QString( keydata ) << algtype;
+}
+
+const QString QgsAuthConfigPkiPaths::issuerAsPem() const
+{
+  if ( !isValid() )
+    return QString();
+
+  return QString( QgsAuthProviderPkiPaths::issuerAsPem( issuerId() ) );
 }
 
 bool QgsAuthConfigPkiPaths::isValid( bool validateid ) const
