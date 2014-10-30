@@ -43,18 +43,18 @@ class QgsAuthProviderBasic : QgsAuthProvider
 };
 
 
-class QgsPkiPathsBundle
+class QgsPkiBundle
 {
 %TypeHeaderCode
 #include <qgsauthenticationprovider.h>
 %End
 
   public:
-    QgsPkiPathsBundle( const QgsAuthConfigPkiPaths& config,
-                       const QSslCertificate& cert,
-                       const QSslKey& certkey,
-                       const QSslCertificate& issuer = QSslCertificate() );
-    ~QgsPkiPathsBundle();
+    QgsPkiBundle( const QgsAuthConfigPkiPaths& config,
+                  const QSslCertificate& cert,
+                  const QSslKey& certkey,
+                  const QSslCertificate& issuer = QSslCertificate() );
+    ~QgsPkiBundle();
 
     bool isValid();
 
@@ -82,12 +82,20 @@ class  QgsAuthProviderPkiPaths : QgsAuthProvider
   public:
     QgsAuthProviderPkiPaths();
 
-    ~QgsAuthProviderPkiPaths();
+    virtual ~QgsAuthProviderPkiPaths();
 
     // QgsAuthProvider interface
     void updateNetworkRequest( QNetworkRequest &request /In,Out/, const QString &authid );
 
     void updateNetworkReply( QNetworkReply *reply, const QString &authid );
     void clearCachedConfig( const QString& authid );
+
+    static const QByteArray certAsPem( const QString &certpath );
+
+    static const QByteArray keyAsPem( const QString &keypath,
+                                      const QString &keypass = QString(),
+                                      QString *algtype = 0 );
+
+    static const QByteArray issuerAsPem( const QString &issuerpath );
 
 };

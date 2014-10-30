@@ -23,6 +23,7 @@ class CORE_EXPORT QgsAuthProvider
     virtual ~QgsAuthProvider();
 
     QgsAuthType::ProviderType providerType() const { return mType; }
+    void setProviderType( QgsAuthType::ProviderType ptype ) { mType = ptype; }
 
     static bool urlToResource( const QString& accessurl, QString *resource, bool withpath = false );
 
@@ -72,14 +73,14 @@ class CORE_EXPORT QgsAuthProviderBasic : public QgsAuthProvider
  * @since 2.6
  */
 
-class CORE_EXPORT QgsPkiPathsBundle
+class CORE_EXPORT QgsPkiBundle
 {
   public:
-    QgsPkiPathsBundle( const QgsAuthConfigPkiPaths& config,
-                       const QSslCertificate& cert,
-                       const QSslKey& certkey,
-                       const QSslCertificate& issuer = QSslCertificate() );
-    ~QgsPkiPathsBundle();
+    QgsPkiBundle( const QgsAuthConfigPkiPaths& config,
+                  const QSslCertificate& cert,
+                  const QSslKey& certkey,
+                  const QSslCertificate& issuer = QSslCertificate() );
+    ~QgsPkiBundle();
 
     bool isValid();
 
@@ -108,22 +109,33 @@ class CORE_EXPORT QgsAuthProviderPkiPaths : public QgsAuthProvider
   public:
     QgsAuthProviderPkiPaths();
 
-    ~QgsAuthProviderPkiPaths();
+    virtual ~QgsAuthProviderPkiPaths();
 
     // QgsAuthProvider interface
     void updateNetworkRequest( QNetworkRequest &request, const QString &authid );
     void updateNetworkReply( QNetworkReply *reply, const QString &authid );
     void clearCachedConfig( const QString& authid );
 
+    static const QByteArray certAsPem( const QString &certpath );
+
+    static const QByteArray keyAsPem( const QString &keypath,
+                                      const QString &keypass = QString(),
+                                      QString *algtype = 0,
+                                      bool reencrypt = true );
+
+    static const QByteArray issuerAsPem( const QString &issuerpath );
+
+  protected:
+
+    virtual QgsPkiBundle * getPkiBundle( const QString &authid );
+
+    virtual void putPkiBundle( const QString &authid, QgsPkiBundle * pkibundle );
+
+    virtual void removePkiBundle( const QString &authid );
+
   private:
 
-    QgsPkiPathsBundle * getPkiPathsBundle( const QString &authid );
-
-    void putPkiPathsBundle( const QString &authid, QgsPkiPathsBundle * pkibundle );
-
-    void removePkiPathsBundle( const QString &authid );
-
-    static QMap<QString, QgsPkiPathsBundle *> mPkiPathsBundleCache;
+    static QMap<QString, QgsPkiBundle *> mPkiBundleCache;
 };
 #endif
 

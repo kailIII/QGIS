@@ -120,6 +120,12 @@ class QgsAuthConfigPkiPaths : QgsAuthConfigBase
 
     bool issuerSelfSigned() const;
     void setIssuerSelfSigned( bool selfsigned );
+    
+    const QString certAsPem() const;
+
+    const QStringList keyAsPem( bool reencrypt = true ) const;
+
+    const QString issuerAsPem() const;
 
     bool isValid( bool validateid = false ) const;
 
