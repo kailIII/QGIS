@@ -14,6 +14,7 @@ class CORE_EXPORT QgsAuthType
       Basic = 1,
 #ifndef QT_NO_OPENSSL
       PkiPaths = 2,
+      PkiPkcs12 = 3,
 #endif
       Unknown = 20 // padding for more standard auth types
     };
@@ -148,6 +149,46 @@ class CORE_EXPORT QgsAuthConfigPkiPaths: public QgsAuthConfigBase
     QString mKeyId;
     QString mKeyPass;
     QString mIssuerId;
+    bool mIssuerSelf;
+};
+
+class CORE_EXPORT QgsAuthConfigPkiPkcs12: public QgsAuthConfigBase
+{
+  public:
+    QgsAuthConfigPkiPkcs12();
+
+    QgsAuthConfigPkiPkcs12( const QgsAuthConfigBase& config )
+        : QgsAuthConfigBase( config ) {}
+
+    ~QgsAuthConfigPkiPkcs12() {}
+
+    const QString bundlePath() const { return mBundlePath; }
+    void setBundlePath( const QString& path ) { mBundlePath = path; }
+
+    const QString bundlePassphrase() const { return mBundlePass; }
+    void setBundlePassphrase( const QString& passphrase ) { mBundlePass = passphrase; }
+
+    const QString issuerPath() const { return mIssuerPath; }
+    void setIssuerPath( const QString& id ) { mIssuerPath = id; }
+
+    bool issuerSelfSigned() const { return mIssuerSelf; }
+    void setIssuerSelfSigned( bool selfsigned ) { mIssuerSelf = selfsigned; }
+
+    const QString certAsPem() const;
+
+    const QStringList keyAsPem( bool reencrypt = true ) const;
+
+    const QString issuerAsPem() const;
+
+    bool isValid( bool validateid = false ) const;
+
+    const QString configString() const;
+    void loadConfigString( const QString& config = QString() );
+
+  private:
+    QString mBundlePath;
+    QString mBundlePass;
+    QString mIssuerPath;
     bool mIssuerSelf;
 };
 

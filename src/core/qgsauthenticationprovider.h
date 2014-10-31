@@ -79,7 +79,8 @@ class CORE_EXPORT QgsPkiBundle
     QgsPkiBundle( const QgsAuthConfigPkiPaths& config,
                   const QSslCertificate& cert,
                   const QSslKey& certkey,
-                  const QSslCertificate& issuer = QSslCertificate() );
+                  const QSslCertificate& issuer = QSslCertificate(),
+                  bool issuerSeflSigned = false );
     ~QgsPkiBundle();
 
     bool isValid();
@@ -96,11 +97,15 @@ class CORE_EXPORT QgsPkiBundle
     const QSslCertificate issuerCert() const { return mIssuer; }
     void setIssuerCert( const QSslCertificate& issuer ) { mIssuer = issuer; }
 
+    bool issuerSelfSigned() const { return mIssuerSelf; }
+    void setIssuerSelfSigned( bool selfsigned ) { mIssuerSelf = selfsigned; }
+
   private:
-    QgsAuthConfigPkiPaths mConfig;
+    QgsAuthConfigBase mConfig;
     QSslCertificate mCert;
     QSslKey mCertKey;
     QSslCertificate mIssuer;
+    bool mIssuerSelf;
 };
 
 
@@ -132,6 +137,28 @@ class CORE_EXPORT QgsAuthProviderPkiPaths : public QgsAuthProvider
     virtual void putPkiBundle( const QString &authid, QgsPkiBundle * pkibundle );
 
     virtual void removePkiBundle( const QString &authid );
+
+  private:
+
+    static QMap<QString, QgsPkiBundle *> mPkiBundleCache;
+};
+
+class CORE_EXPORT QgsAuthProviderPkiPkcs12 : public QgsAuthProviderPkiPaths
+{
+  public:
+    QgsAuthProviderPkiPkcs12();
+
+    ~QgsAuthProviderPkiPkcs12();
+
+    static const QString certAsPem( const QString &bundlepath, const QString &bundlepass );
+
+    static const QString keyAsPem( const QString &bundlepath, const QString &bundlepass, bool reencrypt = true );
+
+    static const QString issuerAsPem( const QString &bundlepath, const QString &bundlepass, const QString &issuerpath );
+
+  protected:
+
+    QgsPkiBundle * getPkiBundle( const QString &authid );
 
   private:
 
