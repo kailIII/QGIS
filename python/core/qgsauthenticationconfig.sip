@@ -9,6 +9,7 @@ class QgsAuthType
       None = 0,
       Basic = 1,
       PkiPaths = 2,
+      PkiPkcs12 = 3,
       Unknown = 20 // padding for more standard auth types
     };
 
@@ -133,3 +134,41 @@ class QgsAuthConfigPkiPaths : QgsAuthConfigBase
     void loadConfigString( const QString& config = QString() );
 
 };
+
+class QgsAuthConfigPkiPkcs12: QgsAuthConfigBase
+{
+%TypeHeaderCode
+#include <qgsauthenticationconfig.h>
+%End
+  public:
+    QgsAuthConfigPkiPkcs12();
+
+    QgsAuthConfigPkiPkcs12( const QgsAuthConfigBase& config );
+
+    ~QgsAuthConfigPkiPkcs12();
+
+    const QString bundlePath() const;
+    void setBundlePath( const QString& path );
+
+    const QString bundlePassphrase() const;
+    void setBundlePassphrase( const QString& passphrase );
+
+    const QString issuerPath() const;
+    void setIssuerPath( const QString& id );
+
+    bool issuerSelfSigned() const;
+    void setIssuerSelfSigned( bool selfsigned );
+
+    const QString certAsPem() const;
+
+    const QStringList keyAsPem( bool reencrypt = true ) const;
+
+    const QString issuerAsPem() const;
+
+    bool isValid( bool validateid = false ) const;
+
+    const QString configString() const;
+    void loadConfigString( const QString& config = QString() );
+
+};
+
