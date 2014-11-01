@@ -743,7 +743,7 @@ QgisApp::QgisApp( QSplashScreen *splash, bool restorePlugins, QWidget * parent, 
     // because some plugins may cause QGIS to crash during startup
     QgsPluginRegistry::instance()->restoreSessionPlugins( QgsApplication::pluginPath() );
 
-    // Also restore plugins from user specified plugin directories - added for 1.7
+    // Also restore plugins from user specified plugin directories
     QString myPaths = settings.value( "plugins/searchPathsForPlugins", "" ).toString();
     if ( !myPaths.isEmpty() )
     {
@@ -2783,7 +2783,7 @@ bool QgisApp::addVectorLayers( const QStringList &theLayerQStringList, const QSt
 
     // create the layer
 
-    QgsVectorLayer *layer = new QgsVectorLayer( src, base, "ogr" );
+    QgsVectorLayer *layer = new QgsVectorLayer( src, base, "ogr", false );
     Q_CHECK_PTR( layer );
 
     if ( ! layer )
@@ -2819,9 +2819,9 @@ bool QgisApp::addVectorLayers( const QStringList &theLayerQStringList, const QSt
       {
         //set friendly name for datasources with only one layer
         QStringList sublayers = layer->dataProvider()->subLayers();
-        QString ligne = sublayers.at( 0 );
-        QStringList elements = ligne.split( ":" );
-        layer->setLayerName( elements.at( 1 ) );
+        QStringList elements = sublayers.at( 0 ).split( ":" );
+        if ( layer->storageType() != "GeoJSON" )
+          layer->setLayerName( elements.at( 1 ) );
         myList << layer;
       }
       else
@@ -2850,6 +2850,11 @@ bool QgisApp::addVectorLayers( const QStringList &theLayerQStringList, const QSt
 
   // Register this layer with the layers registry
   QgsMapLayerRegistry::instance()->addMapLayers( myList );
+  foreach ( QgsMapLayer *l, myList )
+  {
+    bool ok;
+    l->loadDefaultStyle( ok );
+  }
 
   // Only update the map if we frozen in this method
   // Let the caller do it otherwise
@@ -3157,7 +3162,7 @@ void QgisApp::loadOGRSublayers( QString layertype, QString uri, QStringList list
     QgsDebugMsg( "Creating new vector layer using " + composedURI );
     QString name = list.at( i );
     name.replace( ":", " " );
-    QgsVectorLayer *layer = new QgsVectorLayer( composedURI, name, "ogr" );
+    QgsVectorLayer *layer = new QgsVectorLayer( composedURI, name, "ogr", false );
     if ( layer && layer->isValid() )
     {
       myList << layer;
@@ -3175,6 +3180,11 @@ void QgisApp::loadOGRSublayers( QString layertype, QString uri, QStringList list
   {
     // Register layer(s) with the layers registry
     QgsMapLayerRegistry::instance()->addMapLayers( myList );
+    foreach ( QgsMapLayer *l, myList )
+    {
+      bool ok;
+      l->loadDefaultStyle( ok );
+    }
   }
 }
 
@@ -3224,7 +3234,7 @@ void QgisApp::addDatabaseLayers( QStringList const & layerPathList, QString cons
     // create the layer
     QgsDataSourceURI uri( layerPath );
 
-    QgsVectorLayer *layer = new QgsVectorLayer( uri.uri(), uri.table(), providerKey );
+    QgsVectorLayer *layer = new QgsVectorLayer( uri.uri(), uri.table(), providerKey, false );
     Q_CHECK_PTR( layer );
 
     if ( ! layer )
@@ -3256,6 +3266,13 @@ void QgisApp::addDatabaseLayers( QStringList const & layerPathList, QString cons
   }
 
   QgsMapLayerRegistry::instance()->addMapLayers( myList );
+
+  // load default style after adding to process readCustomSymbology signals
+  foreach ( QgsMapLayer *l, myList )
+  {
+    bool ok;
+    l->loadDefaultStyle( ok );
+  }
 
   // draw the map
   mMapCanvas->freeze( false );
@@ -7780,7 +7797,7 @@ QgsVectorLayer* QgisApp::addVectorLayer( QString vectorLayerPath, QString baseNa
   }
 
   // create the layer
-  QgsVectorLayer *layer = new QgsVectorLayer( vectorLayerPath, baseName, providerKey );
+  QgsVectorLayer *layer = new QgsVectorLayer( vectorLayerPath, baseName, providerKey, false );
 
   if ( authok && layer && layer->isValid() )
   {
@@ -7804,6 +7821,8 @@ QgsVectorLayer* QgisApp::addVectorLayer( QString vectorLayerPath, QString baseNa
       QList<QgsMapLayer *> myList;
       myList << layer;
       QgsMapLayerRegistry::instance()->addMapLayers( myList );
+      bool ok;
+      layer->loadDefaultStyle( ok );
     }
   }
   else
@@ -8692,7 +8711,6 @@ void QgisApp::markDirty()
   QgsProject::instance()->dirty( true );
 }
 
-//changed from layerWasAdded to layersWereAdded in 1.8
 void QgisApp::layersWereAdded( QList<QgsMapLayer *> theLayers )
 {
   for ( int i = 0; i < theLayers.size(); ++i )

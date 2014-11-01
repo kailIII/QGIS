@@ -542,7 +542,6 @@
       </layout>
       <zorder>lblPkiPathsCert_2</zorder>
       <zorder>lblPkiPathsKey_2</zorder>
-      <zorder>verticalSpacer</zorder>
       <zorder>lblPkiPathsIssuer_2</zorder>
      </widget>
     </widget>
