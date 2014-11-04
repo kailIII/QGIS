@@ -82,7 +82,15 @@ int QgsGml::getFeatures( const QString& uri, QGis::WkbType* wkbType, QgsRectangl
   QNetworkRequest request( mUri );
   if ( !authid.isEmpty() )
   {
-    QgsAuthManager::instance()->updateNetworkRequest( request, authid );
+    if ( !QgsAuthManager::instance()->updateNetworkRequest( request, authid ) )
+    {
+      QgsMessageLog::logMessage(
+        tr( "GML Getfeature network request update failed for authid %1" ).arg( authid ),
+        tr( "Network" ),
+        QgsMessageLog::CRITICAL
+      );
+      return 1;
+    }
   }
   else if ( !userName.isNull() || !password.isNull() )
   {
@@ -92,7 +100,16 @@ int QgsGml::getFeatures( const QString& uri, QGis::WkbType* wkbType, QgsRectangl
 
   if ( !authid.isEmpty() )
   {
-    QgsAuthManager::instance()->updateNetworkReply( reply, authid );
+    if ( !QgsAuthManager::instance()->updateNetworkReply( reply, authid ) )
+    {
+      delete reply;
+      QgsMessageLog::logMessage(
+        tr( "GML Getfeature network reply update failed for authid %1" ).arg( authid ),
+        tr( "Network" ),
+        QgsMessageLog::CRITICAL
+      );
+      return 1;
+    }
   }
 
   connect( reply, SIGNAL( finished() ), this, SLOT( setFinished() ) );

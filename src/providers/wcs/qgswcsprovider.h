@@ -58,25 +58,27 @@ struct QgsWcsAuthorization
   {}
 
   //! set authorization header
-  void setAuthorization( QNetworkRequest &request ) const
+  bool setAuthorization( QNetworkRequest &request ) const
   {
     if ( !mAuthId.isEmpty() )
     {
-      QgsAuthManager::instance()->updateNetworkRequest( request, mAuthId );
+      return QgsAuthManager::instance()->updateNetworkRequest( request, mAuthId );
     }
     else if ( !mUserName.isNull() || !mPassword.isNull() )
     {
       request.setRawHeader( "Authorization", "Basic " + QString( "%1:%2" ).arg( mUserName ).arg( mPassword ).toAscii().toBase64() );
     }
+    return true;
   }
 
   //! set authorization reply
-  void setAuthorizationReply( QNetworkReply * reply ) const
+  bool setAuthorizationReply( QNetworkReply * reply ) const
   {
     if ( !mAuthId.isEmpty() )
     {
-      QgsAuthManager::instance()->updateNetworkReply( reply, mAuthId );
+      return QgsAuthManager::instance()->updateNetworkReply( reply, mAuthId );
     }
+    return true;
   }
 
   //! Username for basic http authentication

@@ -97,7 +97,12 @@ QgsNewHttpConnection::QgsNewHttpConnection(
     txtUserName->setText( settings.value( credentialsKey + "/username" ).toString() );
     txtPassword->setText( settings.value( credentialsKey + "/password" ).toString() );
 
-    mAuthConfigSelect->setConfigId( settings.value( credentialsKey + "/authid", QString() ).toString() );
+    QString authid = settings.value( credentialsKey + "/authid", QString() ).toString();
+    mAuthConfigSelect->setConfigId( authid );
+    if ( !authid.isEmpty() )
+    {
+      tabAuth->setCurrentIndex( tabAuth->indexOf( mAuthConfigSelect ) );
+    }
   }
 
   if ( mBaseKey != "/Qgis/connections-wms/" )
