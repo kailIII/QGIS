@@ -69,9 +69,9 @@ class QgsAuthManager : QObject
 
     bool eraseAuthenticationDatabase();
 
-    void updateNetworkRequest( QNetworkRequest &request /In,Out/, const QString& authid );
+    bool updateNetworkRequest( QNetworkRequest &request /In,Out/, const QString& authid );
 
-    void updateNetworkReply( QNetworkReply *reply, const QString& authid );
+    bool updateNetworkReply( QNetworkReply *reply, const QString& authid );
 
   signals:
     void messageOut( const QString& message, const QString& tag = smAuthManTag, QgsAuthManager::MessageLevel level = INFO ) const;

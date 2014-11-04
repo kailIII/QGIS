@@ -783,9 +783,20 @@ int QgsWFSProvider::describeFeatureTypeGET( const QString& uri, QString& geometr
   describeFeatureUrl.removeQueryItem( "REQUEST" );
   describeFeatureUrl.addQueryItem( "REQUEST", "DescribeFeatureType" );
   QNetworkRequest request( describeFeatureUrl.toString() );
-  mAuth.setAuthorization( request );
+  if ( !mAuth.setAuthorization( request ) )
+  {
+    QgsMessageLog::logMessage( tr( "Network request update failed for authentication config" ),
+                               tr( "WFS" ) );
+    return 1;
+  }
   QNetworkReply* reply = QgsNetworkAccessManager::instance()->get( request );
-  mAuth.setAuthorizationReply( reply );
+  if ( !mAuth.setAuthorizationReply( reply ) )
+  {
+    delete reply;
+    QgsMessageLog::logMessage( tr( "Network reply update failed for authentication config" ),
+                               tr( "WFS" ) );
+    return 1;
+  }
 
   connect( reply, SIGNAL( finished() ), this, SLOT( networkRequestFinished() ) );
   while ( !mNetworkRequestFinished )
@@ -1381,10 +1392,22 @@ bool QgsWFSProvider::sendTransactionDocument( const QDomDocument& doc, QDomDocum
   QString serverUrl = typeDetectionUri.toString();
 
   QNetworkRequest request( serverUrl );
-  mAuth.setAuthorization( request );
+  if ( !mAuth.setAuthorization( request ) )
+  {
+    QgsMessageLog::logMessage( tr( "Network request update failed for authentication config" ),
+                               tr( "WFS" ) );
+    return false;
+  }
+
   request.setHeader( QNetworkRequest::ContentTypeHeader, "text/xml" );
   QNetworkReply* reply = QgsNetworkAccessManager::instance()->post( request, doc.toByteArray( -1 ) );
-  mAuth.setAuthorizationReply( reply );
+  if ( !mAuth.setAuthorizationReply( reply ) )
+  {
+    delete reply;
+    QgsMessageLog::logMessage( tr( "Network reply update failed for authentication config" ),
+                               tr( "WFS" ) );
+    return false;
+  }
 
   connect( reply, SIGNAL( finished() ), this, SLOT( networkRequestFinished() ) );
   while ( !mNetworkRequestFinished )
@@ -1514,9 +1537,22 @@ void QgsWFSProvider::getLayerCapabilities()
   getCapabilitiesUrl.removeQueryItem( "password" );
   getCapabilitiesUrl.removeQueryItem( "authid" );
   QNetworkRequest request( getCapabilitiesUrl.toString() );
-  mAuth.setAuthorization( request );
+  if ( !mAuth.setAuthorization( request ) )
+  {
+    mCapabilities = 0;
+    QgsMessageLog::logMessage( tr( "Network request update failed for authentication config" ),
+                               tr( "WFS" ) );
+    return;
+  }
   QNetworkReply* reply = QgsNetworkAccessManager::instance()->get( request );
-  mAuth.setAuthorizationReply( reply );
+  if ( !mAuth.setAuthorizationReply( reply ) )
+  {
+    delete reply;
+    mCapabilities = 0;
+    QgsMessageLog::logMessage( tr( "Network reply update failed for authentication config" ),
+                               tr( "WFS" ) );
+    return;
+  }
 
   connect( reply, SIGNAL( finished() ), this, SLOT( networkRequestFinished() ) );
   while ( !mNetworkRequestFinished )

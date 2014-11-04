@@ -762,26 +762,36 @@ bool QgsAuthManager::eraseAuthenticationDatabase()
   return ( removeAllAuthenticationConfigs() && masterPasswordClearDb() );
 }
 
-void QgsAuthManager::updateNetworkRequest( QNetworkRequest &request, const QString& authid )
+bool QgsAuthManager::updateNetworkRequest( QNetworkRequest &request, const QString& authid )
 {
   QgsAuthProvider* provider = configProvider( authid );
   if ( provider )
   {
-    provider->updateNetworkRequest( request, authid );
+    if ( !provider->updateNetworkRequest( request, authid ) )
+    {
+      provider->clearCachedConfig( authid );
+      return false;
+    }
+    return true;
   }
-  else
-  {
-    QgsDebugMsg( QString( "No provider returned for authid: %1" ).arg( authid ) );
-  }
+  QgsDebugMsg( QString( "No provider returned for authid: %1" ).arg( authid ) );
+  return false;
 }
 
-void QgsAuthManager::updateNetworkReply( QNetworkReply *reply, const QString& authid )
+bool QgsAuthManager::updateNetworkReply( QNetworkReply *reply, const QString& authid )
 {
   QgsAuthProvider* provider = configProvider( authid );
   if ( provider )
   {
-    provider->updateNetworkReply( reply , authid );
+    if ( !provider->updateNetworkReply( reply , authid ) )
+    {
+      provider->clearCachedConfig( authid );
+      return false;
+    }
+    return true;
   }
+  QgsDebugMsg( QString( "No provider returned for authid: %1" ).arg( authid ) );
+  return false;
 }
 
 void QgsAuthManager::clearAllCachedConfigs()

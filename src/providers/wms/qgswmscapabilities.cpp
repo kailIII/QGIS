@@ -1863,13 +1863,25 @@ bool QgsWmsCapabilitiesDownload::downloadCapabilities()
   mError.clear();
 
   QNetworkRequest request( url );
-  mAuth.setAuthorization( request );
+  if ( !mAuth.setAuthorization( request ) )
+  {
+    mError = tr( "Download of capabilities failed: network request update failed for authentication config" );
+    QgsMessageLog::logMessage( mError, tr( "WMS" ) );
+    return false;
+  }
   request.setAttribute( QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferNetwork );
   request.setAttribute( QNetworkRequest::CacheSaveControlAttribute, true );
 
   QgsDebugMsg( QString( "getcapabilities: %1" ).arg( url ) );
   mCapabilitiesReply = QgsNetworkAccessManager::instance()->get( request );
-  mAuth.setAuthorizationReply( mCapabilitiesReply );
+  if ( !mAuth.setAuthorizationReply( mCapabilitiesReply ) )
+  {
+    mCapabilitiesReply->deleteLater();
+    mCapabilitiesReply = 0;
+    mError = tr( "Download of capabilities failed: network reply update failed for authentication config" );
+    QgsMessageLog::logMessage( mError, tr( "WMS" ) );
+    return false;
+  }
 
   connect( mCapabilitiesReply, SIGNAL( finished() ), this, SLOT( capabilitiesReplyFinished() ), Qt::DirectConnection );
   connect( mCapabilitiesReply, SIGNAL( downloadProgress( qint64, qint64 ) ), this, SLOT( capabilitiesReplyProgress( qint64, qint64 ) ), Qt::DirectConnection );
@@ -1912,14 +1924,30 @@ void QgsWmsCapabilitiesDownload::capabilitiesReplyFinished()
       else
       {
         QNetworkRequest request( toUrl );
-        mAuth.setAuthorization( request );
+        if ( !mAuth.setAuthorization( request ) )
+        {
+          mHttpCapabilitiesResponse.clear();
+          mError = tr( "Download of capabilities failed: network request update failed for authentication config" );
+          QgsMessageLog::logMessage( mError, tr( "WMS" ) );
+          emit downloadFinished();
+          return;
+        }
         request.setAttribute( QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferNetwork );
         request.setAttribute( QNetworkRequest::CacheSaveControlAttribute, true );
 
         mCapabilitiesReply->deleteLater();
         QgsDebugMsg( QString( "redirected getcapabilities: %1" ).arg( redirect.toString() ) );
         mCapabilitiesReply = QgsNetworkAccessManager::instance()->get( request );
-        mAuth.setAuthorizationReply( mCapabilitiesReply );
+        if ( !mAuth.setAuthorizationReply( mCapabilitiesReply ) )
+        {
+          mHttpCapabilitiesResponse.clear();
+          mCapabilitiesReply->deleteLater();
+          mCapabilitiesReply = 0;
+          mError = tr( "Download of capabilities failed: network reply update failed for authentication config" );
+          QgsMessageLog::logMessage( mError, tr( "WMS" ) );
+          emit downloadFinished();
+          return;
+        }
 
         connect( mCapabilitiesReply, SIGNAL( finished() ), this, SLOT( capabilitiesReplyFinished() ) );
         connect( mCapabilitiesReply, SIGNAL( downloadProgress( qint64, qint64 ) ), this, SLOT( capabilitiesReplyProgress( qint64, qint64 ) ) );

@@ -438,11 +438,11 @@ struct QgsWmsAuthorization
   QgsWmsAuthorization( const QString& userName = QString(), const QString& password = QString(), const QString& referer = QString(), const QString& authid = QString() )
       : mUserName( userName ), mPassword( password ), mReferer( referer ), mAuthId( authid ) {}
 
-  void setAuthorization( QNetworkRequest &request ) const
+  bool setAuthorization( QNetworkRequest &request ) const
   {
     if ( !mAuthId.isEmpty() )
     {
-      QgsAuthManager::instance()->updateNetworkRequest( request, mAuthId );
+      return QgsAuthManager::instance()->updateNetworkRequest( request, mAuthId );
     }
     else if ( !mUserName.isNull() || !mPassword.isNull() )
     {
@@ -453,15 +453,17 @@ struct QgsWmsAuthorization
     {
       request.setRawHeader( "Referer", QString( "%1" ).arg( mReferer ).toAscii() );
     }
+    return true;
   }
 
   //! set authorization reply
-  void setAuthorizationReply( QNetworkReply * reply ) const
+  bool setAuthorizationReply( QNetworkReply * reply ) const
   {
     if ( !mAuthId.isEmpty() )
     {
-      QgsAuthManager::instance()->updateNetworkReply( reply, mAuthId );
+      return QgsAuthManager::instance()->updateNetworkReply( reply, mAuthId );
     }
+    return true;
   }
 
   //! Username for basic http authentication

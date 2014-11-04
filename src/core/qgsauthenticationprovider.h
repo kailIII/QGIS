@@ -27,9 +27,9 @@ class CORE_EXPORT QgsAuthProvider
 
     static bool urlToResource( const QString& accessurl, QString *resource, bool withpath = false );
 
-    virtual void updateNetworkRequest( QNetworkRequest &request, const QString& authid ) = 0;
+    virtual bool updateNetworkRequest( QNetworkRequest &request, const QString& authid ) = 0;
 
-    virtual void updateNetworkReply( QNetworkReply *reply, const QString& authid ) = 0;
+    virtual bool updateNetworkReply( QNetworkReply *reply, const QString& authid ) = 0;
 
     virtual void clearCachedConfig( const QString& authid ) = 0;
 
@@ -49,8 +49,8 @@ class CORE_EXPORT QgsAuthProviderBasic : public QgsAuthProvider
     ~QgsAuthProviderBasic();
 
     // QgsAuthProvider interface
-    void updateNetworkRequest( QNetworkRequest &request, const QString &authid );
-    void updateNetworkReply( QNetworkReply *reply, const QString &authid );
+    bool updateNetworkRequest( QNetworkRequest &request, const QString &authid );
+    bool updateNetworkReply( QNetworkReply *reply, const QString &authid );
     void clearCachedConfig( const QString& authid );
 
   private:
@@ -117,8 +117,8 @@ class CORE_EXPORT QgsAuthProviderPkiPaths : public QgsAuthProvider
     virtual ~QgsAuthProviderPkiPaths();
 
     // QgsAuthProvider interface
-    void updateNetworkRequest( QNetworkRequest &request, const QString &authid );
-    void updateNetworkReply( QNetworkReply *reply, const QString &authid );
+    bool updateNetworkRequest( QNetworkRequest &request, const QString &authid );
+    bool updateNetworkReply( QNetworkReply *reply, const QString &authid );
     void clearCachedConfig( const QString& authid );
 
     static const QByteArray certAsPem( const QString &certpath );

@@ -52,13 +52,13 @@ QgsAuthProviderBasic::~QgsAuthProviderBasic()
   mAuthBasicCache.clear();
 }
 
-void QgsAuthProviderBasic::updateNetworkRequest( QNetworkRequest& request, const QString& authid )
+bool QgsAuthProviderBasic::updateNetworkRequest( QNetworkRequest& request, const QString& authid )
 {
   QgsAuthConfigBasic config = getAuthBasicConfig( authid );
   if ( !config.isValid() )
   {
     QgsDebugMsg( QString( "Update request config FAILED for authid: %1: basic config invalid" ).arg( authid ) );
-    return;
+    return false;
   }
 
   QString username = config.username();
@@ -68,12 +68,14 @@ void QgsAuthProviderBasic::updateNetworkRequest( QNetworkRequest& request, const
   {
     request.setRawHeader( "Authorization", "Basic " + QString( "%1:%2" ).arg( username ).arg( password ).toAscii().toBase64() );
   }
+  return true;
 }
 
-void QgsAuthProviderBasic::updateNetworkReply( QNetworkReply *reply, const QString& authid )
+bool QgsAuthProviderBasic::updateNetworkReply( QNetworkReply *reply, const QString& authid )
 {
   Q_UNUSED( reply );
   Q_UNUSED( authid );
+  return true;
 }
 
 QgsAuthConfigBasic QgsAuthProviderBasic::getAuthBasicConfig( const QString& authid )
@@ -197,29 +199,25 @@ QgsAuthProviderPkiPaths::~QgsAuthProviderPkiPaths()
   mPkiBundleCache.clear();
 }
 
-void QgsAuthProviderPkiPaths::updateNetworkRequest( QNetworkRequest &request, const QString &authid )
+bool QgsAuthProviderPkiPaths::updateNetworkRequest( QNetworkRequest &request, const QString &authid )
 {
   // TODO: is this too restrictive, to intercept only HTTPS connections?
   if ( request.url().scheme().toLower() != QString( "https" ) )
   {
     QgsDebugMsg( QString( "Update request SSL config SKIPPED for authid %1: not HTTPS" ).arg( authid ) );
-    return;
+    return true;
   }
-  else
-  {
-    QgsDebugMsg( QString( "Update request SSL config: HTTPS connection for authid: %1" ).arg( authid ) );
-  }
+
+  QgsDebugMsg( QString( "Update request SSL config: HTTPS connection for authid: %1" ).arg( authid ) );
 
   QgsPkiBundle * pkibundle = getPkiBundle( authid );
   if ( !pkibundle || !pkibundle->isValid() )
   {
     QgsDebugMsg( QString( "Update request SSL config FAILED for authid: %1: PKI bundle invalid" ).arg( authid ) );
-    return;
+    return false;
   }
-  else
-  {
-    QgsDebugMsg( QString( "Update request SSL config: PKI bundle valid for authid: %1" ).arg( authid ) );
-  }
+
+  QgsDebugMsg( QString( "Update request SSL config: PKI bundle valid for authid: %1" ).arg( authid ) );
 
   QSslConfiguration sslConfig = request.sslConfiguration();
   //QSslConfiguration sslConfig( QSslConfiguration::defaultConfiguration() );
@@ -239,36 +237,34 @@ void QgsAuthProviderPkiPaths::updateNetworkRequest( QNetworkRequest &request, co
   sslConfig.setPrivateKey( pkibundle->clientCertKey() );
 
   request.setSslConfiguration( sslConfig );
+
+  return true;
 }
 
-void QgsAuthProviderPkiPaths::updateNetworkReply( QNetworkReply *reply, const QString &authid )
+bool QgsAuthProviderPkiPaths::updateNetworkReply( QNetworkReply *reply, const QString &authid )
 {
   if ( reply->request().url().scheme().toLower() != QString( "https" ) )
   {
     QgsDebugMsg( QString( "Update reply SSL errors SKIPPED for authid %1: not HTTPS" ).arg( authid ) );
-    return;
+    return true;
   }
-  else
-  {
-    QgsDebugMsg( QString( "Update reply SSL errors: HTTPS connection for authid: %1" ).arg( authid ) );
-  }
+
+  QgsDebugMsg( QString( "Update reply SSL errors: HTTPS connection for authid: %1" ).arg( authid ) );
 
   QgsPkiBundle * pkibundle = getPkiBundle( authid );
   if ( !pkibundle || !pkibundle->isValid() )
   {
     QgsDebugMsg( QString( "Update reply SSL errors FAILED: PKI bundle invalid for authid: %1" ).arg( authid ) );
-    return;
+    return false;
   }
-  else
-  {
-    QgsDebugMsg( QString( "Update reply SSL errors: PKI bundle is valid for authid: %1" ).arg( authid ) );
-  }
+
+  QgsDebugMsg( QString( "Update reply SSL errors: PKI bundle is valid for authid: %1" ).arg( authid ) );
 
   if ( !pkibundle->issuerSelfSigned() )
   {
     // TODO: maybe sniff cert to see if it is self-signed, regardless of what user defines
     QgsDebugMsg( QString( "Update reply SSL errors SKIPPED for authid %1: issuer not self-signed" ).arg( authid ) );
-    return;
+    return true;
   }
 
   QList<QSslError> expectedSslErrors;
@@ -293,6 +289,7 @@ void QgsAuthProviderPkiPaths::updateNetworkReply( QNetworkReply *reply, const QS
     expectedSslErrors.append( error );
     reply->ignoreSslErrors( expectedSslErrors );
   }
+  return true;
 }
 
 void QgsAuthProviderPkiPaths::clearCachedConfig( const QString& authid )
