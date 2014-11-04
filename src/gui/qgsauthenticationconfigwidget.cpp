@@ -527,6 +527,12 @@ bool QgsAuthConfigWidget::validatePkiPaths()
     return false;
   }
 
+  if ( cert.isNull() )
+  {
+    writePkiMessage( lePkiPathsMsg, tr( "Failed to load certificate from file" ), Invalid );
+    return false;
+  }
+
   certvalid = cert.isValid();
   QDateTime startdate( cert.effectiveDate() );
   QDateTime enddate( cert.expiryDate() );
