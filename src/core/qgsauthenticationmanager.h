@@ -37,7 +37,9 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     const QString authDbConfigTable() const { return smAuthConfigTable; }
 
-    bool init();
+    bool init( const QString& authdatabasedir = QString() );
+
+    const QString authenticationDbPath() const { return mAuthDbPath; }
 
     bool setMasterPassword( bool verify = false );
 
@@ -146,6 +148,8 @@ class CORE_EXPORT QgsAuthManager : public QObject
     static const QString smAuthPassTable;
     static const QString smAuthManTag;
 
+    QString mAuthDbPath;
+
     QCA::Initializer * mQcaInitializer;
 
     QHash<QString, QgsAuthType::ProviderType> mConfigProviders;
@@ -153,7 +157,6 @@ class CORE_EXPORT QgsAuthManager : public QObject
     bool mProvidersRegistered;
 
     QString mMasterPass;
-    QString mMasterPassReset;
 };
 
 #endif // QGSAUTHENTICATIONMANAGER_H
