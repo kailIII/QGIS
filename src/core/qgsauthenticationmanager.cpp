@@ -1,5 +1,6 @@
 #include "qgsauthenticationmanager.h"
 
+#include <QEventLoop>
 #include <QFileInfo>
 #include <QObject>
 #include <QSqlDatabase>
@@ -7,6 +8,7 @@
 #include <QSqlQuery>
 #include <QTextStream>
 #include <QTime>
+#include <QTimer>
 #include <QVariant>
 
 #include <QtCrypto>
@@ -422,6 +424,11 @@ const QString QgsAuthManager::uniqueConfigId() const
   QStringList configids = configIds();
   QString id;
   int len = 7;
+  // sleep just a bit to make sure the current time has changed
+  QEventLoop loop;
+  QTimer::singleShot( 3, &loop, SLOT( quit() ) );
+  loop.exec();
+
   uint seed = ( uint ) QTime::currentTime().msec();
   qsrand( seed );
 
