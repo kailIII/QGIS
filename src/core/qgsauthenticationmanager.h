@@ -72,6 +72,8 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     bool configIdUnique( const QString &id ) const;
 
+    QStringList configIds() const;
+
     QHash<QString, QgsAuthConfigBase> availableConfigs();
 
 
@@ -122,8 +124,6 @@ class CORE_EXPORT QgsAuthManager : public QObject
     bool masterPasswordClearDb();
 
     const QString masterPasswordCiv() const;
-
-    QStringList configIds() const;
 
     bool verifyPasswordCanDecryptConfigs() const;
 
