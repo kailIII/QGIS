@@ -773,12 +773,16 @@ bool QgsAuthManager::removeAllAuthenticationConfigs()
     updateConfigProviderTypes();
   }
 
+  QgsDebugMsg( QString( "Remove configs from database: %1" ).arg( res ? "SUCCEEDED" : "FAILED" ) );
+
   return res;
 }
 
 bool QgsAuthManager::eraseAuthenticationDatabase()
 {
-  return ( removeAllAuthenticationConfigs() && masterPasswordClearDb() );
+  bool erased = ( removeAllAuthenticationConfigs() && masterPasswordClearDb() );
+  QgsDebugMsg( QString( "Erase database: %1" ).arg( erased ? "SUCCEEDED" : "FAILED" ) );
+  return erased;
 }
 
 bool QgsAuthManager::updateNetworkRequest( QNetworkRequest &request, const QString& authid )
