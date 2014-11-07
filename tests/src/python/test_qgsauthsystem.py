@@ -44,6 +44,8 @@ from utilities import (
 
 QGISAPP, CANVAS, IFACE, PARENT = getQgisTestApp()
 
+TESTDATA = os.path.join(unitTestDataPath(), 'auth_system')
+PKIDATA = os.path.join(TESTDATA, 'pki')
 
 class TestQgsAuthManager(TestCase):
 
@@ -94,6 +96,8 @@ class TestQgsAuthManager(TestCase):
         msg = 'Master password not reset and validated'
         self.assertTrue(self.authm.setMasterPassword('pass', True), msg)
 
+        # NOTE: reset of master password is in auth db test unit
+
     def test_02_auth_configid(self):
         msg = 'Could not generate a config id'
         self.assertIsNotNone(self.authm.uniqueConfigId(), msg)
@@ -108,16 +112,42 @@ class TestQgsAuthManager(TestCase):
         )
         self.assertEqual(len(uids), len(list(set(uids))), msg)
 
+    def config_list(self):
+        return ['Basic', 'PKI-Paths', 'PKI-PKCS#12']
+
     def config_obj(self, kind, base=True):
         if kind == 'Basic':
             config = QgsAuthConfigBasic()
             if base:
                 return config
             config.setName(kind)
-            config.setRealm('Realm')
             config.setUri('http://example.com')
             config.setUsername('username')
             config.setPassword('password')
+            config.setRealm('Realm')
+            return config
+        elif kind == 'PKI-Paths':
+            config = QgsAuthConfigPkiPaths()
+            if base:
+                return config
+            config.setName(kind)
+            config.setUri('http://example.com')
+            config.setCertId(os.path.join(PKIDATA, 'rod_cert.pem'))
+            config.setKeyId(os.path.join(PKIDATA, 'rod_key_pass.pem'))
+            config.setKeyPassphrase('password')
+            config.setIssuerId(os.path.join(PKIDATA, 'ca.pem'))
+            config.setIssuerSelfSigned(True)
+            return config
+        elif kind == 'PKI-PKCS#12':
+            config = QgsAuthConfigPkiPkcs12()
+            if base:
+                return config
+            config.setName(kind)
+            config.setUri('http://example.com')
+            config.setBundlePath(os.path.join(PKIDATA, 'rod.p12'))
+            config.setBundlePassphrase('password')
+            config.setIssuerPath(os.path.join(PKIDATA, 'ca.pem'))
+            config.setIssuerSelfSigned(True)
             return config
 
     def config_values_valid(self, kind, config):
@@ -125,15 +155,36 @@ class TestQgsAuthManager(TestCase):
             """:type config: QgsAuthConfigBasic"""
             return (
                 config.name() == kind
-                and config.realm() == 'Realm'
                 and config.uri() == 'http://example.com'
                 and config.username() == 'username'
                 and config.password() == 'password'
+                and config.realm() == 'Realm'
+            )
+        elif kind == 'PKI-Paths':
+            """:type config: QgsAuthConfigPkiPaths"""
+            return (
+                config.name() == kind
+                and config.uri() == 'http://example.com'
+                and config.certId() == os.path.join(PKIDATA, 'rod_cert.pem')
+                and config.keyId() == os.path.join(PKIDATA, 'rod_key_pass.pem')
+                and config.keyPassphrase() == 'password'
+                and config.issuerId() == os.path.join(PKIDATA, 'ca.pem')
+                and config.issuerSelfSigned() is True
+            )
+        elif kind == 'PKI-PKCS#12':
+            """:type config: QgsAuthConfigPkiPkcs12"""
+            return (
+                config.name() == kind
+                and config.uri() == 'http://example.com'
+                and config.bundlePath() == os.path.join(PKIDATA, 'rod.p12')
+                and config.bundlePassphrase() == 'password'
+                and config.issuerPath() == os.path.join(PKIDATA, 'ca.pem')
+                and config.issuerSelfSigned() is True
             )
 
     def test_03_auth_configs(self):
         # these list items need to match the QgsAuthType provider type strings
-        for kind in ['Basic']:
+        for kind in self.config_list():
             config = self.config_obj(kind, base=False)
             msg = 'Could not validate {0} config'.format(kind)
             self.assertTrue(config.isValid(), msg)
@@ -145,12 +196,20 @@ class TestQgsAuthManager(TestCase):
             msg = 'Could not retrieve {0} config id from store op'.format(kind)
             self.assertIsNotNone(configid, msg)
 
+            msg = 'Config id {0} not in db'.format(configid)
+            self.assertFalse(self.authm.configIdUnique(configid), msg)
+
             msg = 'Could not retrieve {0} config id from db'.format(kind)
             self.assertTrue(configid in self.authm.configIds(), msg)
 
             msg = 'Could not retrieve provider type for {0} config'.format(kind)
             self.assertTrue(QgsAuthType.typeToString(
                 self.authm.configProviderType(configid)) == kind, msg)
+
+            msg = 'Could not retrieve provider ptr for {0} config'.format(kind)
+            self.assertTrue(
+                isinstance(self.authm.configProvider(configid),
+                           QgsAuthProvider), msg)
 
             config2 = self.config_obj(kind, base=True)
             msg = 'Could not load {0} config'.format(kind)
@@ -182,6 +241,38 @@ class TestQgsAuthManager(TestCase):
             self.assertFalse(configid in self.authm.configIds(), msg)
 
     def test_04_auth_db(self):
+
+        for kind in self.config_list():
+            config = self.config_obj(kind, base=False)
+            msg = 'Could not store {0} config'.format(kind)
+            self.assertTrue(self.authm.storeAuthenticationConfig(config), msg)
+
+        msg = 'Could not store a sample of all configs in auth db'
+        self.assertTrue(
+            (len(self.authm.configIds()) == len(self.config_list())), msg)
+
+        msg = 'Could not retrieve available configs from auth db'
+        self.assertTrue(len(self.authm.availableConfigs()) > 0, msg)
+
+        # backup = self.authm.authenticationDbPath()
+        resetpass = self.authm.resetMasterPassword('newpass', True)
+        msg = 'Could not reset master password and/or re-encrypt configs'
+        self.assertTrue(resetpass, msg)
+        
+        # TODO: fix sip parameter not being written to: QString *backup = 0
+        # qDebug('Backup db path: {0}'.format(backup))
+        # msg = 'Could not retrieve backup path for reset master password op'
+        # self.assertTrue(backup != self.authm.authenticationDbPath(), msg)
+
+        msg = 'Could not verify reset master password'
+        self.assertTrue(self.authm.setMasterPassword('newpass', True), msg)
+
+        msg = 'Could not remove all configs from auth db'
+        self.assertTrue(self.authm.removeAllAuthenticationConfigs(), msg)
+
+        msg = 'Configs were not removed from auth db'
+        self.assertTrue(len(self.authm.configIds()) == 0, msg)
+
         msg = 'Could not erase auth db'
         self.assertTrue(self.authm.eraseAuthenticationDatabase(), msg)
 
@@ -190,15 +281,6 @@ class TestQgsAuthManager(TestCase):
                         and not self.authm.masterPasswordHashInDb(), msg)
 
         self.set_master_password()
-
-        kinds = ['Basic']
-        for kind in kinds:
-            config = self.config_obj(kind, base=False)
-            msg = 'Could not store {0} config'.format(kind)
-            self.assertTrue(self.authm.storeAuthenticationConfig(config), msg)
-
-        msg = 'Could not store a sample of all configs in auth db'
-        self.assertTrue((len(self.authm.configIds()) == len(kinds)), msg)
 
 
 if __name__ == '__main__':
