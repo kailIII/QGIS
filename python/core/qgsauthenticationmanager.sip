@@ -21,7 +21,9 @@ class QgsAuthManager : QObject
 
     const QString authDbConfigTable() const;
 
-    bool init();
+    bool init( const QString& authdatabasedir = QString() );
+
+    const QString authenticationDbPath() const;
 
     bool setMasterPassword( bool verify = false );
 
@@ -53,6 +55,8 @@ class QgsAuthManager : QObject
     const QString uniqueConfigId() const;
 
     bool configIdUnique( const QString &id ) const;
+
+    QStringList configIds() const;
 
     QHash<QString, QgsAuthConfigBase> availableConfigs();
 

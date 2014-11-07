@@ -1,5 +1,22 @@
+/***************************************************************************
+    qgsauthenticationmanager.cpp
+    ---------------------
+    begin                : October 5, 2014
+    copyright            : (C) 2014 by Boundless Spatial, Inc. USA
+    author               : Larry Shaffer
+    email                : lshaffer at boundlessgeo dot com
+ ***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+
 #include "qgsauthenticationmanager.h"
 
+#include <QEventLoop>
 #include <QFileInfo>
 #include <QObject>
 #include <QSqlDatabase>
@@ -7,6 +24,7 @@
 #include <QSqlQuery>
 #include <QTextStream>
 #include <QTime>
+#include <QTimer>
 #include <QVariant>
 
 #include <QtCrypto>
@@ -39,7 +57,7 @@ QSqlDatabase QgsAuthManager::authDbConnection() const
   if ( !QSqlDatabase::contains( connectionname ) )
   {
     authdb = QSqlDatabase::addDatabase( "QSQLITE", connectionname );
-    authdb.setDatabaseName( QgsApplication::qgisAuthDbFilePath() );
+    authdb.setDatabaseName( authenticationDbPath() );
   }
   else
   {
@@ -51,7 +69,7 @@ QSqlDatabase QgsAuthManager::authDbConnection() const
   return authdb;
 }
 
-bool QgsAuthManager::init()
+bool QgsAuthManager::init( const QString& authdatabasedir )
 {
   QgsDebugMsg( "Initializing QCA..." );
   mQcaInitializer = new QCA::Initializer( QCA::Practical, 256 );
@@ -67,7 +85,19 @@ bool QgsAuthManager::init()
 
   registerProviders();
 
-  QFileInfo dbinfo( QgsApplication::qgisAuthDbFilePath() );
+  mAuthDbPath = QgsApplication::qgisAuthDbFilePath();
+  if ( !authdatabasedir.isEmpty() )
+  {
+    QFileInfo dbdirinfo( authdatabasedir );
+    if ( dbdirinfo.exists() && dbdirinfo.isDir() )
+    {
+      mAuthDbPath = dbdirinfo.canonicalFilePath() + QString( "/qgis-auth.db" );
+    }
+  }
+
+  QgsDebugMsg( QString( "Authorization database path: %1" ).arg( authenticationDbPath() ) );
+
+  QFileInfo dbinfo( authenticationDbPath() );
   if ( dbinfo.exists() )
   {
     if ( !dbinfo.permission( QFile::ReadOwner | QFile::WriteOwner ) )
@@ -273,10 +303,10 @@ bool QgsAuthManager::resetMasterPassword( const QString& newpassword, bool keepb
 
   // duplicate current db file to 'qgis-auth_YYYY-MM-DD-HHMMSS.db' backup
   QString datestamp( QDateTime::currentDateTime().toString( "yyyy-MM-dd-hhmmss" ) );
-  QString dbbackup( QgsApplication::qgisAuthDbFilePath() );
+  QString dbbackup( authenticationDbPath() );
   dbbackup.replace( QString( ".db" ), QString( "_%1.db" ).arg( datestamp ) );
 
-  if ( !QFile::copy( QgsApplication::qgisAuthDbFilePath(), dbbackup ) )
+  if ( !QFile::copy( authenticationDbPath(), dbbackup ) )
   {
     const char* err = QT_TR_NOOP( "Master password reset FAILED: could not backup current database" );
     QgsDebugMsg( err );
@@ -356,11 +386,11 @@ bool QgsAuthManager::resetMasterPassword( const QString& newpassword, bool keepb
     authDbConnection().close();
     QString errdbbackup( dbbackup );
     errdbbackup.replace( QString( ".db" ), QString( "_ERROR.db" ) );
-    QFile::rename( QgsApplication::qgisAuthDbFilePath(), errdbbackup );
+    QFile::rename( authenticationDbPath(), errdbbackup );
     QgsDebugMsg( QString( "Master password reset FAILED: backed up failed db at %1" ).arg( errdbbackup ) );
 
     // reinstate previous database and password
-    QFile::rename( dbbackup, QgsApplication::qgisAuthDbFilePath() );
+    QFile::rename( dbbackup, authenticationDbPath() );
     mMasterPass = prevpass;
     authDbConnection();
     QgsDebugMsg( "Master password reset FAILED: reinstated previous password and database" );
@@ -410,6 +440,11 @@ const QString QgsAuthManager::uniqueConfigId() const
   QStringList configids = configIds();
   QString id;
   int len = 7;
+  // sleep just a bit to make sure the current time has changed
+  QEventLoop loop;
+  QTimer::singleShot( 3, &loop, SLOT( quit() ) );
+  loop.exec();
+
   uint seed = ( uint ) QTime::currentTime().msec();
   qsrand( seed );
 
@@ -754,12 +789,16 @@ bool QgsAuthManager::removeAllAuthenticationConfigs()
     updateConfigProviderTypes();
   }
 
+  QgsDebugMsg( QString( "Remove configs from database: %1" ).arg( res ? "SUCCEEDED" : "FAILED" ) );
+
   return res;
 }
 
 bool QgsAuthManager::eraseAuthenticationDatabase()
 {
-  return ( removeAllAuthenticationConfigs() && masterPasswordClearDb() );
+  bool erased = ( removeAllAuthenticationConfigs() && masterPasswordClearDb() );
+  QgsDebugMsg( QString( "Erase database: %1" ).arg( erased ? "SUCCEEDED" : "FAILED" ) );
+  return erased;
 }
 
 bool QgsAuthManager::updateNetworkRequest( QNetworkRequest &request, const QString& authid )
@@ -841,10 +880,10 @@ void QgsAuthManager::writeToConsole( const QString &message,
 
 QgsAuthManager::QgsAuthManager( QObject *parent )
     : QObject( parent )
+    , mAuthDbPath( QString() )
     , mQcaInitializer( 0 )
     , mProvidersRegistered( false )
     , mMasterPass( QString() )
-    , mMasterPassReset( QString() )
 {
   connect( this, SIGNAL( messageOut( const QString&, const QString&, QgsAuthManager::MessageLevel ) ),
            this, SLOT( writeToConsole( const QString&, const QString&, QgsAuthManager::MessageLevel ) ) );
@@ -1101,7 +1140,7 @@ bool QgsAuthManager::authDbOpen() const
     if ( !authdb.open() )
     {
       QgsDebugMsg( QString( "Unable to establish database connection\nDatabase: %1\nDriver error: %2\nDatabase error: %3" )
-                   .arg( QgsApplication::qgisAuthDbFilePath() )
+                   .arg( authenticationDbPath() )
                    .arg( authdb.lastError().driverText() )
                    .arg( authdb.lastError().databaseText() ) );
       emit messageOut( tr( "Unable to establish authentication database connection" ), authManTag(), CRITICAL );

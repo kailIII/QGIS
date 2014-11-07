@@ -475,6 +475,7 @@ int main( int argc, char *argv[] )
   // user settings (~/.qgis) and it will be used for QSettings INI file
   QString configpath;
   QString optionpath;
+  QString authdbdirectory;
 
   QString pythonfile;
 
@@ -548,6 +549,10 @@ int main( int argc, char *argv[] )
       else if ( i + 1 < argc && ( arg == "--configpath" || arg == "-c" ) )
       {
         configpath = QDir::toNativeSeparators( QDir( args[++i] ).absolutePath() );
+      }
+      else if ( i + 1 < argc && ( arg == "--authdbdirectory" || arg == "-a" ) )
+      {
+        authdbdirectory = QDir::toNativeSeparators( QDir( args[++i] ).absolutePath() );
       }
       else if ( i + 1 < argc && ( arg == "--code" || arg == "-f" ) )
       {
@@ -851,7 +856,7 @@ int main( int argc, char *argv[] )
 #endif
 
   // initialize authentication manager singleton
-  QgsAuthManager::instance()->init();
+  QgsAuthManager::instance()->init( !authdbdirectory.isEmpty() ? authdbdirectory : QString() );
 
   //set up splash screen
   QString mySplashPath( QgsCustomization::instance()->splashPath() );

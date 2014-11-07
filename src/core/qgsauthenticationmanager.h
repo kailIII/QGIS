@@ -1,3 +1,19 @@
+/***************************************************************************
+    qgsauthenticationmanager.h
+    ---------------------
+    begin                : October 5, 2014
+    copyright            : (C) 2014 by Boundless Spatial, Inc. USA
+    author               : Larry Shaffer
+    email                : lshaffer at boundlessgeo dot com
+ ***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+
 #ifndef QGSAUTHENTICATIONMANAGER_H
 #define QGSAUTHENTICATIONMANAGER_H
 
@@ -37,7 +53,9 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     const QString authDbConfigTable() const { return smAuthConfigTable; }
 
-    bool init();
+    bool init( const QString& authdatabasedir = QString() );
+
+    const QString authenticationDbPath() const { return mAuthDbPath; }
 
     bool setMasterPassword( bool verify = false );
 
@@ -69,6 +87,8 @@ class CORE_EXPORT QgsAuthManager : public QObject
     const QString uniqueConfigId() const;
 
     bool configIdUnique( const QString &id ) const;
+
+    QStringList configIds() const;
 
     QHash<QString, QgsAuthConfigBase> availableConfigs();
 
@@ -121,8 +141,6 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     const QString masterPasswordCiv() const;
 
-    QStringList configIds() const;
-
     bool verifyPasswordCanDecryptConfigs() const;
 
     bool reencryptAllAuthenticationConfigs( const QString& prevpass, const QString& prevciv );
@@ -146,6 +164,8 @@ class CORE_EXPORT QgsAuthManager : public QObject
     static const QString smAuthPassTable;
     static const QString smAuthManTag;
 
+    QString mAuthDbPath;
+
     QCA::Initializer * mQcaInitializer;
 
     QHash<QString, QgsAuthType::ProviderType> mConfigProviders;
@@ -153,7 +173,6 @@ class CORE_EXPORT QgsAuthManager : public QObject
     bool mProvidersRegistered;
 
     QString mMasterPass;
-    QString mMasterPassReset;
 };
 
 #endif // QGSAUTHENTICATIONMANAGER_H
