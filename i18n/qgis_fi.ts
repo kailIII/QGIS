@@ -5543,7 +5543,7 @@ Avaa tulosteikkuna tarkastellaksesi sitä.</translation>
     </message>
     <message>
         <source>&amp;Open Recent</source>
-        <translation>&amp;Avaa edellisiä</translation>
+        <translation type="obsolete">&amp;Avaa edellisiä</translation>
     </message>
     <message>
         <source>New From Template</source>
@@ -6455,6 +6455,10 @@ Toimii nyt aktiivisesti muokattavalle tasolle</translation>
         <source>Fill Ring</source>
         <translation>Täyttökehä</translation>
     </message>
+    <message>
+        <source>Open Recent</source>
+        <translation>Viimeksi avatut</translation>
+    </message>
 </context>
 <context>
     <name>ManageConnectionsDialog</name>
@@ -6753,7 +6757,7 @@ Toimii nyt aktiivisesti muokattavalle tasolle</translation>
     </message>
     <message>
         <source>Showing %d - %d of %d result%s</source>
-        <translation>Näytetään %d - %d kaikkiaan %d tuloksesta %s</translation>
+        <translation type="obsolete">Näytetään %d - %d kaikkiaan %d tuloksesta %s</translation>
     </message>
     <message>
         <source>Coordinate Transformation Error</source>
@@ -6802,6 +6806,13 @@ Toimii nyt aktiivisesti muokattavalle tasolle</translation>
     <message>
         <source>CSW Connection error</source>
         <translation>CSW yhteys virhe</translation>
+    </message>
+    <message numerus="yes">
+        <source>Showing %d - %d of %n result(s)</source>
+        <translation>
+            <numerusform>Näytetään %d - %d kaikkiaan %n tuloksesta</numerusform>
+            <numerusform>Näytetään %d - %d kaikkiaan %n tuloksesta</numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -10684,6 +10695,62 @@ Vastaus oli:
         <source>Legend</source>
         <translation>Selite</translation>
     </message>
+    <message>
+        <source>Classification</source>
+        <translation>Luokittelu</translation>
+    </message>
+    <message>
+        <source>Range</source>
+        <translation>Rajat</translation>
+    </message>
+    <message>
+        <source>Unique Values</source>
+        <translation>Yksilölliset arvot</translation>
+    </message>
+    <message>
+        <source>File Name</source>
+        <translation>Tiedostonimi</translation>
+    </message>
+    <message>
+        <source>Value Map</source>
+        <translation>Arvokartta</translation>
+    </message>
+    <message>
+        <source>Enumeration</source>
+        <translation>Luokittelu</translation>
+    </message>
+    <message>
+        <source>Check Box</source>
+        <translation>Valintaruutu</translation>
+    </message>
+    <message>
+        <source>Text Edit</source>
+        <translation>Tekstin muokkaus</translation>
+    </message>
+    <message>
+        <source>Value Relation</source>
+        <translation>Arvojen suhde</translation>
+    </message>
+    <message>
+        <source>Uuid Generator</source>
+        <translation>UUID generaattori</translation>
+    </message>
+    <message>
+        <source>Photo</source>
+        <translation>Kuva</translation>
+    </message>
+    <message>
+        <source>Web View</source>
+        <translation>Web näyttö</translation>
+    </message>
+    <message>
+        <source>Relation Reference</source>
+        <translation>Relaation viite</translation>
+    </message>
+    <message>
+        <source>Date/Time</source>
+        <translation>Päivä/Aika</translation>
+    </message>
 </context>
 <context>
     <name>QSpatiaLiteDriver</name>
@@ -11574,7 +11641,7 @@ Virhe: %1</translation>
     </message>
     <message>
         <source>The current layer has not selected features</source>
-        <translation>Nykyiseltä tasolta ei ole valittu ominaisuuksia</translation>
+        <translation type="obsolete">Nykyiseltä tasolta ei ole valittu ominaisuuksia</translation>
     </message>
     <message>
         <source>Delete features</source>
@@ -12072,6 +12139,10 @@ Ohita nämä virheet aina?</translation>
             <numerusform>%n SSL virhe tapahtui</numerusform>
             <numerusform>%n SSL virheitä tapahtui</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>The current layer has no selected features</source>
+        <translation>Nykyisellä tasolla ei ole valittuja ominaisuuksia</translation>
     </message>
 </context>
 <context>
@@ -17570,6 +17641,22 @@ Ole ystävällinen ja yritä pienemmällä resoluutiolla tai pienemmällä paper
     <message>
         <source>Change...</source>
         <translation>Muuta...</translation>
+    </message>
+    <message>
+        <source>Add a new overview</source>
+        <translation>Lisää uusi yleiskatsaus</translation>
+    </message>
+    <message>
+        <source>Remove selected overview</source>
+        <translation>Poista valitut yleiskatsaukset</translation>
+    </message>
+    <message>
+        <source>Move selected overview up</source>
+        <translation>Siirrä valitut yleiskatsaukset ylöspäin</translation>
+    </message>
+    <message>
+        <source>Move selected overview down</source>
+        <translation>Siirrä valitut yleiskatsaukset alaspäin</translation>
     </message>
 </context>
 <context>
