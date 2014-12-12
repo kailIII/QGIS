@@ -59,5 +59,6 @@ ADD_SUBDIRECTORY(GdalTools)
 ADD_SUBDIRECTORY(db_manager)
 ADD_SUBDIRECTORY(processing)
 ADD_SUBDIRECTORY(MetaSearch)
+ADD_SUBDIRECTORY(opengeo)
 
 PY_COMPILE(staged-plugins "${PYTHON_OUTPUT_DIRECTORY}/plugins")

@@ -288,6 +288,20 @@ class AlgorithmExecutionDialog(QDialog):
         self.resetGUI()
         self.tabWidget.setCurrentIndex(1)  # log tab
 
+    def iterate(self, i):
+        self.setInfo('<b>Algorithm %s iteration #%i completed</b>'
+                     % (self.alg.name, i))
+
+    def cancel(self):
+        self.setInfo('<b>Algorithm %s canceled</b>' % self.alg.name)
+        try:
+            self.algEx.algExecuted.disconnect()
+            self.algEx.terminate()
+        except:
+            pass
+        self.resetGUI()
+        self.tabWidget.setCurrentIndex(1)  # log tab
+
     def resetGUI(self):
         QApplication.restoreOverrideCursor()
         self.progressLabel.setText('')
