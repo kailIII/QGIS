@@ -108,6 +108,28 @@ ENDFOREACH ()
 # Unclear why this dylib does not get copied in above loop
 EXECUTE_PROCESS (COMMAND cp "${BUILD_LIB_PATH}/libgeos_c.1.dylib" "${QLIBDIR}")
 
+# Copy OTB for processing
+MESSAGE (STATUS "Copying OTB...")
+FILE (GLOB otb_binaries "${BUILD_LIB_PATH}/../bin/otb*")
+FOREACH (bin ${otb_binaries})
+  EXECUTE_PROCESS (COMMAND ditto ${bin} "${QLIBDIR}/../bin")
+ENDFOREACH ()
+FILE (GLOB otb_libs "${BUILD_LIB_PATH}/../lib/otb/*.dylib")
+FOREACH (lib ${otb_libs})
+  EXECUTE_PROCESS (COMMAND ditto ${lib} "${QLIBDIR}")
+ENDFOREACH ()
+FILE (GLOB otb_app_libs "${BUILD_LIB_PATH}/../lib/otb/applications/*.dylib")
+FOREACH (lib ${otb_app_libs})
+  EXECUTE_PROCESS (COMMAND ditto ${lib} "${QLIBDIR}")
+ENDFOREACH ()
+
+# SAGA
+MESSAGE (STATUS "Copying SAGA...")
+EXECUTE_PROCESS (COMMAND ditto "${BUILD_LIB_PATH}/../bin/saga_cmd" "${QLIBDIR}/../bin")
+FILE (GLOB saga_libs "${BUILD_LIB_PATH}/../lib/saga/*.dylib")
+FOREACH (lib ${saga_libs})
+  EXECUTE_PROCESS (COMMAND ditto ${lib} "${QLIBDIR}")
+ENDFOREACH ()
 # Copy GDAL binaries for processing
 MESSAGE (STATUS "Copying gdal...")
 FILE (GLOB gdal_binaries "${BUILD_LIB_PATH}/../bin/gdal*")
