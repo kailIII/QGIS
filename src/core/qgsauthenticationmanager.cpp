@@ -16,6 +16,7 @@
 
 #include "qgsauthenticationmanager.h"
 
+#include <QDir>
 #include <QEventLoop>
 #include <QFileInfo>
 #include <QObject>
@@ -85,7 +86,7 @@ bool QgsAuthManager::init( const QString& authdatabasedir )
 
   registerProviders();
 
-  mAuthDbPath = QgsApplication::qgisAuthDbFilePath();
+  mAuthDbPath = QDir::cleanPath( QgsApplication::qgisAuthDbFilePath() );
   if ( !authdatabasedir.isEmpty() )
   {
     QFileInfo dbdirinfo( authdatabasedir );
@@ -98,6 +99,19 @@ bool QgsAuthManager::init( const QString& authdatabasedir )
   QgsDebugMsg( QString( "Authorization database path: %1" ).arg( authenticationDbPath() ) );
 
   QFileInfo dbinfo( authenticationDbPath() );
+  QFileInfo dbdirinfo( dbinfo.path() );
+  if ( !dbdirinfo.exists() )
+  {
+    QgsDebugMsg( QString( "Auth db directory path does not exist, making path: %1" ).arg( dbdirinfo.filePath() ) );
+    if ( !QDir().mkpath( dbdirinfo.filePath() ) )
+    {
+      const char* err = QT_TR_NOOP( "Auth db directory path could not be created" );
+      QgsDebugMsg( err );
+      emit messageOut( tr( err ), authManTag(), CRITICAL );
+      return false;
+    }
+  }
+
   if ( dbinfo.exists() )
   {
     if ( !dbinfo.permission( QFile::ReadOwner | QFile::WriteOwner ) )
@@ -113,6 +127,10 @@ bool QgsAuthManager::init( const QString& authdatabasedir )
       updateConfigProviderTypes();
       return true;
     }
+  }
+  else
+  {
+    QgsDebugMsg( "Auth db does not exist: creating through QSqlDatabase initial connection" );
   }
 
   // create and open the db
