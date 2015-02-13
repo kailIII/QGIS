@@ -86,20 +86,18 @@ bool QgsAuthManager::init( const QString& authdatabasedir )
 
   registerProviders();
 
-  mAuthDbPath = QDir::cleanPath( QgsApplication::qgisAuthDbFilePath() );
+  QString dbdirpath( QDir::cleanPath( QgsApplication::qgisSettingsDirPath() ) );
   if ( !authdatabasedir.isEmpty() )
   {
     QFileInfo dbdirinfo( authdatabasedir );
     if ( dbdirinfo.exists() && dbdirinfo.isDir() )
     {
-      mAuthDbPath = dbdirinfo.canonicalFilePath() + QString( "/qgis-auth.db" );
+      dbdirpath = dbdirinfo.canonicalFilePath();
     }
   }
+  QgsDebugMsg( QString( "Auth db directory path: %1" ).arg( dbdirpath ) );
 
-  QgsDebugMsg( QString( "Authorization database path: %1" ).arg( authenticationDbPath() ) );
-
-  QFileInfo dbinfo( authenticationDbPath() );
-  QFileInfo dbdirinfo( dbinfo.path() );
+  QFileInfo dbdirinfo( dbdirpath );
   if ( !dbdirinfo.exists() )
   {
     QgsDebugMsg( QString( "Auth db directory path does not exist, making path: %1" ).arg( dbdirinfo.filePath() ) );
@@ -112,6 +110,10 @@ bool QgsAuthManager::init( const QString& authdatabasedir )
     }
   }
 
+  mAuthDbPath = dbdirpath + QString( "/qgis-auth.db" );
+  QgsDebugMsg( QString( "Auth db path: %1" ).arg( authenticationDbPath() ) );
+
+  QFileInfo dbinfo( authenticationDbPath() );
   if ( dbinfo.exists() )
   {
     if ( !dbinfo.permission( QFile::ReadOwner | QFile::WriteOwner ) )
