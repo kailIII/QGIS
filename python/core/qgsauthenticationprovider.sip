@@ -53,7 +53,7 @@ class QgsPkiBundle
     QgsPkiBundle( const QgsAuthConfigPkiPaths& config,
                   const QSslCertificate& cert,
                   const QSslKey& certkey,
-                  const QSslCertificate& issuer = QSslCertificate(),
+                  const QList<QSslCertificate>& issuer = QList<QSslCertificate>(),
                   bool issuerSeflSigned = false );
     ~QgsPkiBundle();
 
@@ -68,8 +68,8 @@ class QgsPkiBundle
     const QSslKey clientCertKey() const;
     void setClientCertKey( const QSslKey& certkey );
 
-    const QSslCertificate issuerCert() const;
-    void setIssuerCert( const QSslCertificate& issuer );
+    const QList<QSslCertificate> issuerCert() const;
+    void setIssuerCert( const QList<QSslCertificate>& issuer );
     
     bool issuerSelfSigned() const;
     void setIssuerSelfSigned( bool selfsigned );
@@ -99,6 +99,8 @@ class  QgsAuthProviderPkiPaths : QgsAuthProvider
                                       const QString &keypass = QString(),
                                       QString *algtype = 0,
                                       bool reencrypt = true );
+
+    static const QList<QSslCertificate> issuer( const QString &issuerpath );
 
     static const QByteArray issuerAsPem( const QString &issuerpath );
 
