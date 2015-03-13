@@ -149,7 +149,7 @@ void QgsAuthProviderBasic::clearCachedConfig( const QString& authid )
 QgsPkiBundle::QgsPkiBundle( const QgsAuthConfigPkiPaths& config,
                             const QSslCertificate& cert,
                             const QSslKey& certkey,
-                            const QSslCertificate& issuer,
+                            const QList<QSslCertificate>& issuer,
                             bool issuerSeflSigned )
     : mConfig( config )
     , mCert( cert )
@@ -239,13 +239,14 @@ bool QgsAuthProviderPkiPaths::updateNetworkRequest( QNetworkRequest &request, co
   //QSslConfiguration sslConfig( QSslConfiguration::defaultConfiguration() );
 
   // TODO: test for supported protocols for OpenSSL version built against
+  // IMPORTANT: Qt 4.7 and 4.8 have different protocol enums and default protocols
   //sslConfig.setProtocol( QSsl::TlsV1SslV3 );
 
-  QSslCertificate issuercert = pkibundle->issuerCert();
-  if ( !issuercert.isNull() )
+  QList<QSslCertificate> issuercert = pkibundle->issuerCert();
+  if ( !issuercert.isEmpty() )
   {
     QList<QSslCertificate> sslCAs( sslConfig.caCertificates() );
-    sslCAs << issuercert;
+    sslCAs.append( issuercert );
     sslConfig.setCaCertificates( sslCAs );
   }
 
@@ -283,27 +284,28 @@ bool QgsAuthProviderPkiPaths::updateNetworkReply( QNetworkReply *reply, const QS
     return true;
   }
 
-  QList<QSslError> expectedSslErrors;
-  QSslError error = QSslError();
+  QList<QSslError> errors;
   QString issuer = "";
-  QSslCertificate issuercert = pkibundle->issuerCert();
+  QList<QSslCertificate> issuercert = pkibundle->issuerCert();
 
-  if ( !issuercert.isNull() )
+  if ( !issuercert.isEmpty() )
   {
     issuer = "defined issuer";
-    error = QSslError( QSslError::SelfSignedCertificate, issuercert );
+    Q_FOREACH ( const QSslCertificate& cert, issuercert )
+    {
+      errors.append( QSslError( QSslError::SelfSignedCertificate, cert ) );
+    }
   }
   else
   {
     // issuer not defined, but may already be in available CAs
     issuer = "ALL in chain";
-    error = QSslError( QSslError::SelfSignedCertificate );
+    errors.append( QSslError( QSslError::SelfSignedCertificate ) );
   }
-  if ( error.error() != QSslError::NoError )
+  if ( !errors.isEmpty() )
   {
     QgsDebugMsg( QString( "Adding self-signed cert expected ssl error for %1 for authid: %2" ).arg( issuer ).arg( authid ) );
-    expectedSslErrors.append( error );
-    reply->ignoreSslErrors( expectedSslErrors );
+    reply->ignoreSslErrors( errors );
   }
   return true;
 }
@@ -320,6 +322,7 @@ void QgsAuthProviderPkiPaths::clearCachedConfig( const QString& authid )
   }
 }
 
+// static
 const QByteArray QgsAuthProviderPkiPaths::certAsPem( const QString &certpath )
 {
   bool pem = certpath.endsWith( ".pem", Qt::CaseInsensitive );
@@ -331,6 +334,7 @@ const QByteArray QgsAuthProviderPkiPaths::certAsPem( const QString &certpath )
   return ( !clientcert.isNull() ? clientcert.toPem() : QByteArray() );
 }
 
+// static
 const QByteArray QgsAuthProviderPkiPaths::keyAsPem( const QString &keypath,
     const QString &keypass,
     QString *algtype,
@@ -370,16 +374,36 @@ const QByteArray QgsAuthProviderPkiPaths::keyAsPem( const QString &keypath,
   return ( clientkey.toPem( reencrypt && !keypass.isEmpty() ? keypass.toUtf8() : QByteArray() ) );
 }
 
-const QByteArray QgsAuthProviderPkiPaths::issuerAsPem( const QString &issuerpath )
+// static
+const QList<QSslCertificate> QgsAuthProviderPkiPaths::issuer( const QString& issuerpath )
 {
+  QList<QSslCertificate> issuercert;
   bool pem = issuerpath.endsWith( ".pem", Qt::CaseInsensitive );
-  if ( pem )
+  issuercert = QSslCertificate::fromData( fileData_( issuerpath, pem ), pem ? QSsl::Pem : QSsl::Der );
+  if ( issuercert.isEmpty() )
   {
-    return fileData_( issuerpath, pem );
+    QgsDebugMsg( QString( "Parsed issuer cert(s) EMPTY for: %1" ).arg( issuerpath ) );
   }
-  QSslCertificate issuercert( fileData_( issuerpath ), QSsl::Der );
-  return ( !issuercert.isNull() ? issuercert.toPem() : QByteArray() );
+  return issuercert;
 }
+
+// static
+const QByteArray QgsAuthProviderPkiPaths::issuerAsPem( const QString& issuerpath )
+{
+  QByteArray issuerpem;
+  QList<QSslCertificate> issuercert( QgsAuthProviderPkiPaths::issuer( issuerpath ) );
+  if ( !issuercert.isEmpty() )
+  {
+    QStringList issuers;
+    Q_FOREACH ( const QSslCertificate& cert, issuercert )
+    {
+      issuers << cert.toPem();
+    }
+    issuerpem = issuers.join( "\n" ).toAscii() + "\n";
+  }
+  return issuerpem;
+}
+
 
 QgsPkiBundle *QgsAuthProviderPkiPaths::getPkiBundle( const QString& authid )
 {
@@ -432,21 +456,20 @@ QgsPkiBundle *QgsAuthProviderPkiPaths::getPkiBundle( const QString& authid )
 
   if ( clientkey.isNull() )
   {
-    QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, PEM cert key could not be created" ).arg( authid ).toAscii().constData() );
+    QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, PEM cert key could not be created" ).arg( authid ) );
     return bundle;
   }
 
   // init issuer cert
-  QSslCertificate issuercert;
+  QList<QSslCertificate> issuercert;
   if ( !config.issuerId().isEmpty() )
   {
-    QByteArray issuerdata( QgsAuthProviderPkiPaths::issuerAsPem( config.issuerId() ) );
-    if ( !issuerdata.isNull() )
+    issuercert = QgsAuthProviderPkiPaths::issuer( config.issuerId() );
+    Q_FOREACH ( const QSslCertificate& cert, issuercert )
     {
-      issuercert = QSslCertificate( issuerdata );
-      if ( !issuercert.isValid() )
+      if ( !cert.isValid() )
       {
-        QgsDebugMsg( QString( "PKI bundle  for authid %1: insert FAILED, issuer cert is not valid" ).arg( authid ) );
+        QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, an issuer cert is not valid" ).arg( authid ) );
         return bundle;
       }
     }
@@ -545,13 +568,7 @@ const QString QgsAuthProviderPkiPkcs12::issuerAsPem( const QString &bundlepath,
   Q_UNUSED( bundlepath );
   Q_UNUSED( bundlepass );
 
-  bool pem = issuerpath.endsWith( ".pem", Qt::CaseInsensitive );
-  if ( pem )
-  {
-    return QString( fileData_( issuerpath, pem ) );
-  }
-  QSslCertificate issuercert( fileData_( issuerpath ), QSsl::Der );
-  return QString( !issuercert.isNull() ? issuercert.toPem() : QByteArray() );
+  return QString( QgsAuthProviderPkiPaths::certAsPem( issuerpath ) );
 
 #if 0 //FIXME: can return empty issuer if resolution of chain has issues
   QString issuer;
@@ -621,7 +638,7 @@ QgsPkiBundle *QgsAuthProviderPkiPkcs12::getPkiBundle( const QString &authid )
     bundle = mPkiBundleCache.value( authid );
     if ( bundle )
     {
-      QgsDebugMsg( QString( "Retrieved PKI bundle for authid %1" ).arg( authid ).toAscii().constData() );
+      QgsDebugMsg( QString( "Retrieved PKI bundle for authid %1" ).arg( authid ) );
       return bundle;
     }
   }
@@ -631,7 +648,7 @@ QgsPkiBundle *QgsAuthProviderPkiPkcs12::getPkiBundle( const QString &authid )
 
   if ( !QgsAuthManager::instance()->loadAuthenticationConfig( authid, config, true ) )
   {
-    QgsDebugMsg( QString( "PKI bundle for authid %1: FAILED to retrieve config" ).arg( authid ).toAscii().constData() );
+    QgsDebugMsg( QString( "PKI bundle for authid %1: FAILED to retrieve config" ).arg( authid ) );
     return bundle;
   }
 
@@ -640,7 +657,7 @@ QgsPkiBundle *QgsAuthProviderPkiPkcs12::getPkiBundle( const QString &authid )
   QSslCertificate clientcert( QgsAuthProviderPkiPkcs12::certAsPem( config.bundlePath(), config.bundlePassphrase() ).toAscii() );
   if ( !clientcert.isValid() )
   {
-    QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, client cert is not valid" ).arg( authid ).toAscii().constData() );
+    QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, client cert is not valid" ).arg( authid ) );
     return bundle;
   }
 
@@ -649,7 +666,7 @@ QgsPkiBundle *QgsAuthProviderPkiPkcs12::getPkiBundle( const QString &authid )
 
   if ( keydata.isNull() )
   {
-    QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, no key data read" ).arg( authid ).toAscii().constData() );
+    QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, no key data read" ).arg( authid ) );
     return bundle;
   }
 
@@ -660,16 +677,15 @@ QgsPkiBundle *QgsAuthProviderPkiPkcs12::getPkiBundle( const QString &authid )
                      !config.bundlePassphrase().isNull() ? config.bundlePassphrase().toUtf8() : QByteArray() );
 
   // init issuer cert
-  QSslCertificate issuercert;
+  QList<QSslCertificate> issuercert;
   if ( !config.issuerPath().isEmpty() )
   {
-    QByteArray issuerdata( QgsAuthProviderPkiPkcs12::issuerAsPem( config.bundlePath(), config.bundlePassphrase(), config.issuerPath() ).toAscii() );
-    if ( !issuerdata.isNull() )
+    issuercert = QgsAuthProviderPkiPaths::issuer( config.issuerPath() );
+    Q_FOREACH ( const QSslCertificate& cert, issuercert )
     {
-      issuercert = QSslCertificate( issuerdata );
-      if ( !issuercert.isValid() )
+      if ( !cert.isValid() )
       {
-        QgsDebugMsg( QString( "PKI bundle  for authid %1: insert FAILED, issuer cert is not valid" ).arg( authid ).toAscii().constData() );
+        QgsDebugMsg( QString( "PKI bundle for authid %1: insert FAILED, an issuer cert is not valid" ).arg( authid ) );
         return bundle;
       }
     }
