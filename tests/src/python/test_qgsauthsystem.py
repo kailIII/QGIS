@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """QGIS Unit tests for core QgsAuthManager class
 
-From build dir: ctest -R PyQgsAuthManager -V
+From build dir: ctest -R PyQgsAuthenticationSystem -V
 
 .. note:: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -57,6 +57,8 @@ class TestQgsAuthManager(TestCase):
         msg = 'Auth db could not be created in temp dir'
         assert os.path.exists(cls.authm.authenticationDbPath()), msg
 
+        cls.mpass = 'pass'  # master password
+
         db1 = QFileInfo(cls.authm.authenticationDbPath()).canonicalFilePath()
         db2 = QFileInfo(cls.authdbdir + '/qgis-auth.db').canonicalFilePath()
         msg = 'Auth db path does not match db path of manager'
@@ -74,7 +76,7 @@ class TestQgsAuthManager(TestCase):
 
     def set_master_password(self):
         msg = 'Failed to store and verify master password in auth db'
-        assert self.authm.setMasterPassword('pass', True), msg
+        assert self.authm.setMasterPassword(self.mpass, True), msg
 
     def test_01_master_password(self):
         msg = 'Master password is not set'
@@ -87,14 +89,14 @@ class TestQgsAuthManager(TestCase):
         self.assertTrue(self.authm.verifyMasterPassword(), msg)
 
         msg = 'Master password comparison dissimilar'
-        self.assertTrue(self.authm.masterPasswordSame('pass'), msg)
+        self.assertTrue(self.authm.masterPasswordSame(self.mpass), msg)
 
         msg = 'Master password not unset'
         self.authm.clearMasterPassword()
         self.assertFalse(self.authm.masterPasswordIsSet(), msg)
 
         msg = 'Master password not reset and validated'
-        self.assertTrue(self.authm.setMasterPassword('pass', True), msg)
+        self.assertTrue(self.authm.setMasterPassword(self.mpass, True), msg)
 
         # NOTE: reset of master password is in auth db test unit
 
@@ -254,15 +256,16 @@ class TestQgsAuthManager(TestCase):
         msg = 'Could not retrieve available configs from auth db'
         self.assertTrue(len(self.authm.availableConfigs()) > 0, msg)
 
-        # backup = self.authm.authenticationDbPath()
-        resetpass = self.authm.resetMasterPassword('newpass', True)
+        backup = None
+        resetpass, backup = self.authm.resetMasterPassword(
+            'newpass', self.mpass, True, backup)
         msg = 'Could not reset master password and/or re-encrypt configs'
         self.assertTrue(resetpass, msg)
         
-        # TODO: fix sip parameter not being written to: QString *backup = 0
-        # qDebug('Backup db path: {0}'.format(backup))
-        # msg = 'Could not retrieve backup path for reset master password op'
-        # self.assertTrue(backup != self.authm.authenticationDbPath(), msg)
+        qDebug('Backup db path: {0}'.format(backup))
+        msg = 'Could not retrieve backup path for reset master password op'
+        self.assertIsNotNone(backup)
+        self.assertTrue(backup != self.authm.authenticationDbPath(), msg)
 
         msg = 'Could not verify reset master password'
         self.assertTrue(self.authm.setMasterPassword('newpass', True), msg)

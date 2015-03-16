@@ -47,7 +47,7 @@ QgsMasterPasswordResetDialog::~QgsMasterPasswordResetDialog()
 {
 }
 
-bool QgsMasterPasswordResetDialog::requestMasterPasswordReset( QString *password, bool *keepbackup )
+bool QgsMasterPasswordResetDialog::requestMasterPasswordReset( QString *newpass, QString *oldpass, bool *keepbackup )
 {
   validatePasswords();
   leMasterPassCurrent->setFocus();
@@ -57,7 +57,8 @@ bool QgsMasterPasswordResetDialog::requestMasterPasswordReset( QString *password
 
   if ( ok )
   {
-    *password = leMasterPassNew->text();
+    *newpass = leMasterPassNew->text();
+    *oldpass = leMasterPassCurrent->text();
     *keepbackup = chkKeepBackup->isChecked();
     return true;
   }
@@ -144,17 +145,18 @@ void QgsAuthUtils::resetMasterPassword( QgsMessageBar *msgbar, int timeout, QWid
 
   // get new password via dialog; do current password verification in-dialog
   QString newpass;
+  QString oldpass;
   bool keepbackup = false;
   QgsMasterPasswordResetDialog dlg( parent );
 
-  if ( !dlg.requestMasterPasswordReset( &newpass, &keepbackup ) )
+  if ( !dlg.requestMasterPasswordReset( &newpass, &oldpass, &keepbackup ) )
   {
     QgsDebugMsg( "Master password reset: input canceled by user" );
     return;
   }
 
   QString backuppath;
-  if ( !QgsAuthManager::instance()->resetMasterPassword( newpass, keepbackup, &backuppath ) )
+  if ( !QgsAuthManager::instance()->resetMasterPassword( newpass, oldpass, keepbackup, &backuppath ) )
   {
     msg = QObject::tr( "Master password FAILED to be reset" );
     level = QgsMessageBar::WARNING;

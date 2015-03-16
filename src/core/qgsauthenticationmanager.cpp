@@ -316,8 +316,15 @@ bool QgsAuthManager::masterPasswordSame( const QString &pass ) const
   return mMasterPass == pass;
 }
 
-bool QgsAuthManager::resetMasterPassword( const QString& newpassword, bool keepbackup, QString *backuppath )
+bool QgsAuthManager::resetMasterPassword( const QString& newpass, const QString &oldpass,
+                                          bool keepbackup, QString *backuppath )
 {
+
+  // verify caller knows the current master password
+  // this means that the user will have had to already set the master password as well
+  if ( !masterPasswordSame( oldpass ) )
+    return false;
+
   // close any connection to current db
   authDbConnection().close();
 
@@ -335,7 +342,7 @@ bool QgsAuthManager::resetMasterPassword( const QString& newpassword, bool keepb
   }
   QgsDebugMsg( "Master password reset: backed up current database" );
 
-  // create new connection
+  // create new database and connection
   authDbConnection();
 
   // store current password and civ
@@ -357,7 +364,7 @@ bool QgsAuthManager::resetMasterPassword( const QString& newpassword, bool keepb
     QgsDebugMsg( "Master password reset: cleared current password from database" );
 
   // mMasterPass empty, set new password (don't verify, since not stored yet)
-  setMasterPassword( newpassword, false );
+  setMasterPassword( newpass, false );
 
   // store new password hash
   if ( ok && !masterPasswordStoreInDb() )

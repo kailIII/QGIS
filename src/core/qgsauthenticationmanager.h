@@ -71,7 +71,7 @@ class CORE_EXPORT QgsAuthManager : public QObject
 
     bool masterPasswordSame( const QString& pass ) const;
 
-    bool resetMasterPassword( const QString& newpassword, bool keepbackup, QString *backuppath = 0 );
+    bool resetMasterPassword( const QString& newpass, const QString& oldpass, bool keepbackup, QString *backuppath = 0 );
 
     const QString authManTag() const { return smAuthManTag; }
 
