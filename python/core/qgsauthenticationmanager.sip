@@ -39,7 +39,7 @@ class QgsAuthManager : QObject
 
     bool masterPasswordSame( const QString& pass ) const;
 
-    bool resetMasterPassword(const QString& newpassword, bool keepbackup, QString *backuppath = 0 );
+    bool resetMasterPassword( const QString& newpassword, const QString& oldpass, bool keepbackup, QString *backuppath /In,Out/ = 0 );
 
     const QString authManTag() const;
 
