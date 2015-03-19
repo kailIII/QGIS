@@ -540,6 +540,14 @@ const QString QgsAuthProviderPkiPkcs12::issuerAsPem( const QString &bundlepath,
     const QString &bundlepass,
     const QString &issuerpath )
 {
+  // interim fix until block below is corrected
+  // same as QgsAuthProviderPkiPaths::issuerAsPem, but returns QString
+  Q_UNUSED( bundlepath );
+  Q_UNUSED( bundlepass );
+
+  return QString( QgsAuthProviderPkiPaths::certAsPem( issuerpath ) );
+
+#if 0 //FIXME: can return empty issuer if resolution of chain has issues
   QString issuer;
   if ( !QCA::isSupported( "pkcs12" ) )
     return issuer;
@@ -594,6 +602,7 @@ const QString QgsAuthProviderPkiPkcs12::issuerAsPem( const QString &bundlepath,
   }
 
   return chainlist.join( "\n" );
+#endif
 }
 
 QgsPkiBundle *QgsAuthProviderPkiPkcs12::getPkiBundle( const QString &authid )
